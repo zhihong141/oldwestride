@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Run - Cinematic West (With Audio, No Mane)</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            color: #d7ccc8;
+        }
+        canvas {
+            display: block;
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(40, 30, 20, 0.85);
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            max-width: 260px;
+            border: 2px solid #8d6e63;
+            z-index: 10;
+        }
+        h1 { margin: 0 0 5px 0; font-size: 18px; color: #ffab91; text-transform: uppercase; letter-spacing: 2px; }
+        p { margin: 0 0 5px 0; font-size: 12px; color: #bcaaa4; line-height: 1.4; }
+        .highlight { color: #ffcc80; font-weight: bold; }
+    
+        /* --- Responsive layout tweaks --- */
+        @media (max-width: 768px) {
+            #controls {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                width: auto;
+                font-size: 11px;
+                padding: 10px;
+            }
+            #controls p,
+            #controls label,
+            #controls button {
+                font-size: 11px;
+            }
+        }
+        @media (max-width: 480px) {
+            #controls {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                padding: 8px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            #controls h1 {
+                font-size: 16px;
+            }
+        }
+
+        /* --- Mobile landscape & responsiveness --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #orientationOverlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(33,24,18,0.96), rgba(9,4,2,0.98));
+            color: #ffe0b2;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 9999;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        #orientationOverlay h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        #orientationOverlay p {
+            font-size: 13px;
+            color: #d7ccc8;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            #controls {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                width: auto;
+                font-size: 11px;
+                padding: 10px;
+            }
+            #controls p,
+            #controls label,
+            #controls button {
+                font-size: 11px;
+            }
+        }
+        @media (max-width: 480px) {
+            #controls {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                padding: 8px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            #controls h1 {
+                font-size: 16px;
+            }
+        }
+
+        /* Extra compact layout for small landscape phones */
+        @media (max-height: 480px) and (orientation: landscape) {
+            #controls {
+                top: 6px;
+                right: 6px;
+                left: auto;
+                max-width: 260px;
+                padding: 6px 8px;
+                font-size: 10px;
+            }
+            #controls h1 {
+                font-size: 14px;
+            }
+            #controls p,
+            #controls label,
+            #controls button,
+            #controls input,
+            #controls select {
+                font-size: 10px;
+            }
+        }
+</style>
+</head>
+<body>
+
+<div id="controls">
+    <h1>The Wild West</h1>
+    <p>• <span class="highlight">Ambience:</span> wind, saddle creaks, distant coyotes</p>
+    <p>• <span class="highlight">Foley:</span> hoof beats & dust puffs</p>
+    <p>• <span class="highlight">Score:</span> sparse twangy guitar & whistle</p>
+    <p style="margin-top:8px;font-style:italic;">Click anywhere or press Space to enable sound.</p>
+    <div style="margin-top:8px;">
+        <label style="font-size:11px; cursor:pointer;">
+            <span class="highlight">Custom Music:</span> upload track
+            <input type="file" id="musicFile" accept="audio/*" style="display:block;margin-top:4px;font-size:11px;" title="Upload your own music track to loop over the ride">
+        </label>
+        <p style="margin:4px 0 0 0;font-size:10px;color:#8d6e63;">(Loops your own song over the ride)</p>
+        <p style="margin:2px 0 0 0;font-size:10px;color:#ffcc80;">Tip: Upload your own track for a custom ride.</p>
+        <p style="margin:0;font-size:10px;color:#bcaaa4;">Try “Midnight run” + Camera mode for a calmer loop.</p>
+    </div>
+    <div style="margin-top:10px;">
+        <label style="font-size:11px;">
+            <span class="highlight">Ride speed:</span>
+            <input type="range" id="speedSlider" min="0.7" max="1.25" value="1.0" step="0.03" style="width:100%;" title="Adjust horse speed: Jog ↔ Fast gallop">
+        </label>
+        <p style="margin:3px 0 0 0;font-size:10px;color:#8d6e63;" id="speedLabel">Mode: Gallop</p>
+    </div>
+    <div style="margin-top:8px;border-top:1px solid rgba(140,110,90,0.6);padding-top:6px;">
+        <p id="trailTimer" style="margin:0;font-size:11px;color:#ffe0b2;">Time on the trail: 00:00</p>
+        <p id="trailDistance" style="margin:2px 0 0 0;font-size:11px;color:#d7ccc8;">Miles ridden: 0.0</p>
+    </div>
+    <div style="margin-top:8px;">
+        <p style="margin:0 0 4px 0;font-size:11px;color:#ffcc80;"><span class="highlight">Color tint:</span></p>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="grade-btn" data-grade="warm" title="Warm, dusty film tint"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #ffcc80;background:rgba(255,204,128,0.18);color:#ffe0b2;cursor:pointer;">
+                Warm
+            </button>
+            <button class="grade-btn" data-grade="neutral" title="Balanced neutral tint"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #8d6e63;background:transparent;color:#d7ccc8;cursor:pointer;">
+                Neutral
+            </button>
+            <button class="grade-btn" data-grade="cool" title="Cool, moonlit tint"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #8d6e63;background:transparent;color:#cfd8dc;cursor:pointer;">
+                Cool
+            </button>
+        </div>
+    </div>
+    <div style="margin-top:8px;">
+        <p style="margin:0 0 4px 0;font-size:11px;color:#ffcc80;">
+            <span class="highlight">Scene presets:</span>
+        </p>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="preset-btn" data-preset="sunset" title="Soft jog at golden hour"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #ffcc80;background:rgba(255,204,128,0.12);color:#ffe0b2;cursor:pointer;">
+                Sunset jog
+            </button>
+            <button class="preset-btn" data-preset="midnight" title="Cool midnight gallop"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #8d6e63;background:transparent;color:#cfd8dc;cursor:pointer;">
+                Midnight run
+            </button>
+            <button class="preset-btn" data-preset="highnoon" title="Bright, harsh midday trail"
+                style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid #8d6e63;background:transparent;color:#ffe0b2;cursor:pointer;">
+                High noon
+            </button>
+        </div>
+    </div>
+    <div style="margin-top:8px;border-top:1px solid rgba(140,110,90,0.6);padding-top:6px;">
+        <button id="captureBtn"
+            style="font-size:11px;padding:4px 10px;border-radius:3px;border:1px solid #ffcc80;background:rgba(255,204,128,0.15);color:#ffe0b2;cursor:pointer;width:100%;text-align:center;" title="Save a postcard image of the current frame">
+            Capture postcard
+        </button>
+        <p style="margin:4px 0 0 0;font-size:10px;color:#8d6e63;text-align:center;">Downloads a PNG of your current ride.</p>
+        <div style="margin-top:6px;">
+            <button id="cameraBtn"
+                style="font-size:11px;padding:4px 10px;border-radius:3px;border:1px solid #8d6e63;background:transparent;color:#d7ccc8;cursor:pointer;width:100%;text-align:center;" title="Toggle Camera mode for a cleaner, less noisy view">
+                Camera mode: Off
+            </button>
+            <p style="margin:3px 0 0 0;font-size:10px;color:#8d6e63;text-align:center;">Cleaner view (less film FX)</p>
+        </div>
+    </div>
+    <div style="margin-top:6px;">
+        <label style="font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="reducedMotionToggle" style="transform:scale(0.9);" />
+            <span><span class="highlight">Reduced motion:</span> softer shake & film jitter</span>
+        </label>
+        <p style="margin:3px 0 0 0;font-size:10px;color:#8d6e63;">For comfort or sensitive viewers.</p>
+    </div>
+</div>
+<div id="uiHint" style="position:fixed;top:12px;right:12px;padding:6px 10px;background:rgba(20,15,10,0.85);border-radius:3px;border:1px solid #8d6e63;font-size:10px;color:#ffe0b2;z-index:9;display:none;pointer-events:none;">
+    Controls hidden – press H to show.
+</div>
+<div id="orientationOverlay">
+    <div>
+        <h2>Rotate your phone</h2>
+        <p>For the best view of this ride, please turn your device to landscape.</p>
+    </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+
+    // Cached Background Layers
+    let mesaLayer, midDesertLayer, frontDesertLayer, foregroundLayer;
+    let patternWidth = 2000;
+
+    function resize() {
+        width = Math.max(1, window.innerWidth);
+        height = Math.max(1, window.innerHeight);
+
+        // Match canvas CSS size to viewport so it fills the screen on phones
+        if (canvas) {
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+        }
+
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas) {
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+        }
+        if (ctx && typeof ctx.setTransform === 'function') {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        generateBackgrounds();
+        initVultures();
+        initStars();
+    }
+    window.addEventListener('resize', resize);
+
+    // --- Configuration ---
+    const SCALE = 1.1; // slightly smaller horse & body scale for better fit on phones
+    const SPEED_MULTIPLIER = 0.016;
+    const GROUND_Y_OFFSET = 160; // raise ground a bit to reveal more sky on short screens
+
+    // Anatomy
+    const BODY_LENGTH = 125 * SCALE;
+    const NECK_LENGTH = 75 * SCALE;
+    const HEAD_LENGTH = 45 * SCALE;
+    const TAIL_LENGTH = 65 * SCALE;
+
+    // Leg lengths
+    const BACK_UPPER_LEN = 80 * SCALE;
+    const BACK_LOWER_LEN = 85 * SCALE;
+    const FRONT_UPPER_LEN = 75 * SCALE;
+    const FRONT_LOWER_LEN = 75 * SCALE;
+
+    // --- State ---
+    let time = 0;
+
+    // Time of Day State
+    let dayCycleTimer = 0;
+    const DAY_DURATION = 35000;
+
+    // Lightning State
+    let lightningTimer = 0;
+
+    // Dust Storm State
+    let dustStormProgress = 0;
+
+    // Film Look State
+    let titleOpacity = 1.0;
+    let titleTimer = 0;
+    let cueDotTimer = Math.random() * 500 + 300;
+    let cueDotActive = 0;
+    let filmJitterY = 0;
+    let reducedMotion = false;
+
+    // Scroll offsets
+    let mountScroll = 0;
+    let midScroll = 0;
+    let frontScroll = 0;
+    let groundScroll = 0;
+    let foreScroll = 0;
+
+    let screenShake = 0;
+    let hoofImpactCounter = 0;
+    let blinkTimer = 0;
+    const particles = [];
+    let dustIntensity = 1.0;
+
+    // Film Artifact State
+    let scratchTimer = 0;
+    let scratchX = 0;
+
+    // Tumbleweed State
+    let tumbleweed = { x: -100, y: 0, rot: 0, active: false };
+
+    // Vulture & star state
+    let vultures = [];
+    let stars = [];
+
+    // Rare event state
+    let ghostRider = {
+        active: false,
+        x: 0,
+        y: 0,
+        life: 0
+    };
+    let wantedMatchTimer = 0;
+    let shootingStar = {
+        active: false,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        life: 0
+    };
+
+    // Windmill State
+    let windmill = {
+        x: -200,
+        active: false,
+        bladeAngle: 0
+    };
+
+    // Train State
+    let train = {
+        x: -500,
+        active: false,
+        smoke: []
+    };
+
+    // Foreground Props State
+    let fgProps = [];
+
+    // Last whole-mile marker we've spawned
+    let lastMileMarker = 0;
+
+
+    // Telegraph poles
+    let telegraphPoles = [];
+    let poleTimer = 0;
+
+    // Frontier town
+    let town = {
+        x: -1500,
+        active: false
+    };
+
+    // Ride speed multiplier (Jog ↔ Gallop)
+    let speedFactor = 1.0;
+
+    // Ride session timer & distance
+    let rideStartTime = null;
+    let lastFrameTime = null;
+    let milesRidden = 0;
+
+    // Color tint preset
+    let colorGrade = 'warm';
+
+    // Simple "chapter card" system (tiny narrative lines at top-left)
+    // Now tied to distance milestones rather than pure time.
+    const chapterLines = [
+        "Mile 1: Fresh tracks in the dust.",
+        "Mile 2: The saddle creaks into a slow rhythm.",
+        "Mile 3: A lone crow circles overhead.",
+        "Mile 4: The wind dries the sweat on your hands.",
+        "Mile 5: Still no town in sight…",
+        "Mile 6: The horse’s breath grows louder in the quiet.",
+        "Mile 7: Heat shimmers above the trail.",
+        "Mile 8: The wind grows colder.",
+        "Mile 9: You swear you saw another rider in the dark.",
+        "Mile 10: The WANTED poster back there still haunts you.",
+        "Mile 11: Somewhere, a coyote answers your thoughts.",
+        "Mile 12: Stars begin to claim the sky.",
+        "Mile 13: The town lights flicker, still far away.",
+        "Mile 14: Dust hangs low like a ghostly veil.",
+        "Mile 15: Your shadow rides beside you, stretched and thin.",
+        "Mile 16: The horse pushes on without complaint.",
+        "Mile 17: Every hoofbeat sounds like a ticking clock.",
+        "Mile 18: The night feels heavier on your shoulders.",
+        "Mile 19: You can almost hear piano from a saloon ahead.",
+        "Mile 20: One more mile, you tell yourself. Just one more."
+    ];
+    const chapterMiles = [
+        1, 2, 3, 4, 5,
+        6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20
+    ];
+    let chapterIndex = 0;          // next line/mile to use
+    let chapterActiveIndex = -1;   // currently visible line
+    let chapterAlpha = 0;          // 0..1 fade
+    let chapterPhase = 'idle';     // 'idle' | 'fadeIn' | 'hold' | 'fadeOut'
+    let chapterPhaseTimer = 0;     // seconds within current phase
+    let nextChapterMile = chapterMiles.length > 0 ? chapterMiles[0] : Infinity;
+// Camera mode (less film FX, smoother view)
+    let cameraMode = false;
+    // Tracks whether the UI panel is currently hidden (for cinematic mode tweaks)
+    let uiHidden = false;
+
+    // --- AUDIO SYSTEM STATE ---
+    let audioCtx = null;
+    let masterGain = null;
+    let windSource = null;
+    let sharedNoiseBuffer = null;
+    const legOnGround = [false, false, false, false];
+    let neckImpact = 0; // smoothed neck compression factor based on foreleg impact
+
+    // Custom music state
+    let customMusicElement = null;
+    let customMusicSource = null;
+
+    // --- AUDIO: setup & helpers ---
+    function handleAudioStart() {
+        if (!audioCtx) {
+            initAudio();
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    window.addEventListener('click', handleAudioStart);
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'Enter') {
+            handleAudioStart();
+        }
+    });
+
+    function initAudio() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+
+        audioCtx = new AC();
+
+        // If a custom music element exists from a previous session, reconnect it
+        if (customMusicElement && !customMusicSource) {
+            try {
+                customMusicSource = audioCtx.createMediaElementSource(customMusicElement);
+                customMusicSource.connect(masterGain);
+            } catch (e) {
+                console.warn('Could not reattach custom music source:', e);
+            }
+        }
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.6;
+        masterGain.connect(audioCtx.destination);
+
+        startWindAmbience();
+        scheduleCreak();
+        scheduleCoyote();
+        scheduleScorePhrase();
+    }
+
+    function setupCustomMusic(file) {
+        if (!file) return;
+        // Ensure audio context is started
+        if (!audioCtx) {
+            initAudio();
+        }
+        if (!audioCtx) return;
+
+        if (!masterGain) {
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.6;
+            masterGain.connect(audioCtx.destination);
+        }
+
+        if (customMusicElement) {
+            try { customMusicElement.pause(); } catch (e) {}
+        }
+        if (customMusicSource) {
+            try { customMusicSource.disconnect(); } catch (e) {}
+            customMusicSource = null;
+        }
+
+        const url = URL.createObjectURL(file);
+        const audioEl = new Audio();
+        audioEl.src = url;
+        audioEl.loop = true;
+        audioEl.volume = 0.85;
+        customMusicElement = audioEl;
+
+        try {
+            const srcNode = audioCtx.createMediaElementSource(audioEl);
+            srcNode.connect(masterGain);
+            customMusicSource = srcNode;
+        } catch (e) {
+            console.warn('Could not create media element source for custom music:', e);
+        }
+
+        audioEl.play().catch(err => {
+            console.warn('Autoplay blocked for custom track:', err);
+        });
+    }
+
+    // Wire up the file input, speed slider & tint presets once DOM is ready
+    
+    function handleOrientationChange() {
+        const overlay = document.getElementById('orientationOverlay');
+        if (!overlay) return;
+        const isPortrait = window.innerHeight > window.innerWidth;
+        if (isPortrait) {
+            overlay.style.display = 'flex';
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+window.addEventListener('resize', handleOrientationChange);
+window.addEventListener('load', handleOrientationChange);
+
+window.addEventListener('load', () => {
+        const controlsDiv = document.getElementById('controls');
+        // On small landscape screens, start with UI hidden to maximize view
+        if (window.innerWidth > window.innerHeight && window.innerHeight < 460) {
+            if (typeof setUiHidden === 'function') {
+                setTimeout(() => setUiHidden(true), 150);
+            }
+        }
+
+        const uiHint = document.getElementById('uiHint');
+        const canvasEl = document.getElementById('canvas');
+
+        if (canvasEl) {
+            canvasEl.addEventListener('dblclick', () => {
+                if (typeof setUiHidden === 'function') {
+                    const currentlyHidden = controlsDiv && controlsDiv.style.display === 'none';
+                    setUiHidden(!currentlyHidden);
+                }
+            })
+            // Mobile: emulate double-tap to toggle UI
+            let lastTapTime = 0;
+            canvasEl.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTapTime < 350) {
+                    e.preventDefault();
+                    if (typeof setUiHidden === 'function') {
+                        const currentlyHidden = controlsDiv && controlsDiv.style.display === 'none';
+                        setUiHidden(!currentlyHidden);
+                    }
+                }
+                lastTapTime = now;
+            }, { passive: false });
+;
+        }
+
+        function setUiHidden(hidden) {
+            if (!controlsDiv) return;
+            uiHidden = !!hidden;
+            if (hidden) {
+                controlsDiv.style.display = 'none';
+                if (uiHint) uiHint.style.display = 'block';
+            } else {
+                controlsDiv.style.display = 'block';
+                if (uiHint) uiHint.style.display = 'none';
+            }
+        }
+
+        const fileInput = document.getElementById('musicFile');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                // Make sure audio engine is running (user interaction via file dialog counts as gesture)
+                if (!audioCtx || audioCtx.state !== 'running') {
+                    handleAudioStart();
+                }
+                setupCustomMusic(file);
+            });
+        }
+
+        const speedSlider = document.getElementById('speedSlider');
+        const speedLabel = document.getElementById('speedLabel');
+        if (speedSlider) {
+            speedSlider.addEventListener('input', () => {
+                const v = parseFloat(speedSlider.value) || 1.0;
+                speedFactor = v;
+                if (speedLabel) {
+                    if (v < 0.9) {
+                        speedLabel.textContent = 'Mode: Jog';
+                    } else if (v > 1.1) {
+                        speedLabel.textContent = 'Mode: Fast gallop';
+                    } else {
+                        speedLabel.textContent = 'Mode: Gallop';
+                    }
+                }
+            });
+        }
+
+        const gradeButtons = document.querySelectorAll('.grade-btn');
+        const updateGradeButtons = (activeGrade) => {
+            gradeButtons.forEach(btn => {
+                const g = btn.dataset.grade || 'neutral';
+                if (g === activeGrade) {
+                    btn.style.borderColor = '#ffcc80';
+                    btn.style.backgroundColor = 'rgba(255,204,128,0.25)';
+                    btn.style.color = '#ffe0b2';
+                } else {
+                    btn.style.borderColor = '#8d6e63';
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = (g === 'cool') ? '#cfd8dc' : '#d7ccc8';
+                }
+            });
+        };
+        if (gradeButtons.length > 0) {
+            updateGradeButtons(colorGrade);
+            gradeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const g = btn.dataset.grade || 'neutral';
+                    colorGrade = g;
+                    updateGradeButtons(colorGrade);
+                });
+            });
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyH') {
+                if (typeof setUiHidden === 'function') {
+                    const currentlyHidden = controlsDiv && controlsDiv.style.display === 'none';
+                    setUiHidden(!currentlyHidden);
+                }
+            }
+        });
+
+        const presetButtons = document.querySelectorAll('.preset-btn');
+        if (presetButtons.length > 0) {
+            const applyPreset = (name) => {
+                let v = speedFactor;
+                if (name === 'sunset') {
+                    v = 0.7;
+                    colorGrade = 'warm';
+                    dayCycleTimer = DAY_DURATION * 0.4; // golden hour / sunset
+                } else if (name === 'midnight') {
+                    v = 1.0;
+                    colorGrade = 'cool';
+                    dayCycleTimer = DAY_DURATION * 0.85; // late night
+                } else if (name === 'highnoon') {
+                    v = 1.0;
+                    colorGrade = 'neutral';
+                    dayCycleTimer = DAY_DURATION * 0.1; // bright daytime
+                }
+                speedFactor = v;
+
+                if (speedSlider) {
+                    speedSlider.value = String(v);
+                }
+                if (speedLabel) {
+                    if (v < 0.9) {
+                        speedLabel.textContent = 'Mode: Jog';
+                    } else if (v > 1.1) {
+                        speedLabel.textContent = 'Mode: Fast gallop';
+                    } else {
+                        speedLabel.textContent = 'Mode: Gallop';
+                    }
+                }
+                if (typeof updateGradeButtons === 'function') {
+                    updateGradeButtons(colorGrade);
+                }
+            };
+
+            presetButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = btn.dataset.preset || '';
+                    applyPreset(preset);
+                });
+            });
+        }
+
+        const cameraBtn = document.getElementById('cameraBtn');
+        if (cameraBtn) {
+            cameraBtn.addEventListener('click', () => {
+                cameraMode = !cameraMode;
+                cameraBtn.textContent = cameraMode ? 'Camera mode: On' : 'Camera mode: Off';
+                cameraBtn.style.borderColor = cameraMode ? '#ffcc80' : '#8d6e63';
+                cameraBtn.style.backgroundColor = cameraMode ? 'rgba(255,204,128,0.18)' : 'transparent';
+            });
+        }
+
+        const reducedMotionToggle = document.getElementById('reducedMotionToggle');
+        if (reducedMotionToggle) {
+            reducedMotionToggle.addEventListener('change', () => {
+                reducedMotion = !!reducedMotionToggle.checked;
+            });
+        }
+
+        const captureBtn = document.getElementById('captureBtn');
+        if (captureBtn) {
+            captureBtn.addEventListener('click', () => {
+                capturePostcard();
+            });
+        }
+
+
+
+        const hideUiBtn = document.getElementById('hideUiBtn');
+        if (hideUiBtn) {
+            hideUiBtn.addEventListener('click', () => {
+                if (typeof setUiHidden !== 'function') return;
+                const currentlyHidden = controlsDiv && controlsDiv.style.display === 'none';
+                setUiHidden(!currentlyHidden);
+            });
+        }
+    });
+
+    function getNoiseBuffer() {
+        if (!audioCtx) return null;
+        if (sharedNoiseBuffer) return sharedNoiseBuffer;
+        const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1);
+        }
+        sharedNoiseBuffer = buffer;
+        return sharedNoiseBuffer;
+    }
+
+    // Background wind ambience
+    function startWindAmbience() {
+        if (!audioCtx) return;
+        const noiseSrc = audioCtx.createBufferSource();
+        noiseSrc.buffer = getNoiseBuffer();
+        noiseSrc.loop = true;
+
+        const hp = audioCtx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 80;
+
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 1200;
+
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.18;
+
+        noiseSrc.connect(hp);
+        hp.connect(lp);
+        lp.connect(gain);
+        gain.connect(masterGain);
+
+        noiseSrc.start();
+        windSource = noiseSrc;
+    }
+
+    // Saddle creaks
+    function scheduleCreak() {
+        if (!audioCtx) return;
+        const delay = 4 + Math.random() * 8;
+        setTimeout(() => {
+            if (!audioCtx || audioCtx.state !== 'running') { scheduleCreak(); return; }
+            playCreak();
+            scheduleCreak();
+        }, delay * 1000);
+    }
+
+    function playCreak() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const src = audioCtx.createBufferSource();
+        src.buffer = getNoiseBuffer();
+
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 450;
+        bp.Q.value = 6;
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0, now);
+        gain.gain.linearRampToValueAtTime(0.14, now + 0.03);
+        gain.gain.linearRampToValueAtTime(0.0, now + 0.45);
+
+        src.connect(bp);
+        bp.connect(gain);
+        gain.connect(masterGain);
+
+        src.start(now);
+        src.stop(now + 0.5);
+    }
+
+    // Distant coyote howls
+    function scheduleCoyote() {
+        if (!audioCtx) return;
+        const delay = 12 + Math.random() * 18;
+        setTimeout(() => {
+            if (!audioCtx || audioCtx.state !== 'running') { scheduleCoyote(); return; }
+            playCoyote();
+            scheduleCoyote();
+        }, delay * 1000);
+    }
+
+    function playCoyote() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime + 0.1;
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.3);
+        gain.gain.linearRampToValueAtTime(0.0, now + 2.3);
+
+        const freq = osc.frequency;
+        freq.setValueAtTime(600, now);
+        freq.linearRampToValueAtTime(900, now + 0.5);
+        freq.linearRampToValueAtTime(500, now + 1.1);
+        freq.linearRampToValueAtTime(800, now + 1.7);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + 2.6);
+    }
+
+    // Hoof click
+    function playHoof(volume = 0.12) {
+        if (!audioCtx || audioCtx.state !== 'running') return;
+        const now = audioCtx.currentTime;
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'square';
+        const gain = audioCtx.createGain();
+
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+
+        gain.gain.setValueAtTime(0.0, now);
+        gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+
+    // Sparse Western score: plucky guitar + occasional harmonica/whistle
+    function scheduleScorePhrase() {
+        if (!audioCtx) return;
+        const delay = 6 + Math.random() * 8;
+        setTimeout(() => {
+            if (!audioCtx || audioCtx.state !== 'running') { scheduleScorePhrase(); return; }
+            playScorePhrase();
+            scheduleScorePhrase();
+        }, delay * 1000);
+    }
+
+    function playScorePhrase() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime + 0.05;
+        const root = 196; // G3
+        const semis = [0, 3, 5, 7]; // small motif
+
+        semis.forEach((st, i) => {
+            const freq = root * Math.pow(2, st / 12);
+            playPluck(freq, now + i * 0.32, 0.22);
+        });
+
+        if (Math.random() < 0.4) {
+            // Harmonica-like sustain
+            playHarmonica(587, now + 1.1, 2.2); // D5
+        } else if (Math.random() < 0.3) {
+            // Whistled note
+            playWhistle(880, now + 1.0, 1.4); // A5
+        }
+    }
+
+    function playPluck(freq, startTime, duration) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        osc.type = 'triangle';
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2600, startTime);
+        filter.frequency.exponentialRampToValueAtTime(900, startTime + duration);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0, startTime);
+        gain.gain.linearRampToValueAtTime(0.22, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+    }
+
+    function playHarmonica(freq, startTime, duration) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sawtooth';
+
+        const vibr = audioCtx.createOscillator();
+        vibr.frequency.value = 5;
+
+        const vibrGain = audioCtx.createGain();
+        vibrGain.gain.value = freq * 0.02;
+        vibr.connect(vibrGain);
+        vibrGain.connect(osc.frequency);
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = freq;
+        filter.Q.value = 4;
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0, startTime);
+        gain.gain.linearRampToValueAtTime(0.18, startTime + 0.4);
+        gain.gain.linearRampToValueAtTime(0.0, startTime + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(startTime);
+        vibr.start(startTime);
+        osc.stop(startTime + duration + 0.2);
+        vibr.stop(startTime + duration + 0.2);
+    }
+
+    function playWhistle(freq, startTime, duration) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+
+        const vibr = audioCtx.createOscillator();
+        vibr.frequency.value = 6;
+
+        const vibrGain = audioCtx.createGain();
+        vibrGain.gain.value = freq * 0.015;
+        vibr.connect(vibrGain);
+        vibrGain.connect(osc.frequency);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0, startTime);
+        gain.gain.linearRampToValueAtTime(0.15, startTime + 0.3);
+        gain.gain.linearRampToValueAtTime(0.0, startTime + duration);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(startTime);
+        vibr.start(startTime);
+        osc.stop(startTime + duration + 0.2);
+        vibr.stop(startTime + duration + 0.2);
+    }
+
+    // --- UTILS ---
+    function lerpColor(r1, g1, b1, r2, g2, b2, t) {
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    
+    function capturePostcard() {
+        if (!canvas) return;
+        try {
+            const now = new Date();
+            const ts = now.toISOString().replace(/[:.]/g, '-');
+            const safeMiles = (typeof milesRidden === 'number' ? milesRidden : 0).toFixed(1);
+            const filename = `midnight_ride_${safeMiles}mi_${ts}.png`;
+
+            const dataURL = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (e) {
+            console.warn('Capture failed:', e);
+        }
+    }
+
+// --- PRE-RENDERING ---
+
+    function createMesaLayer() {
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, width);
+        c.height = Math.max(1, height);
+        const cx = c.getContext('2d');
+        cx.filter = 'blur(2px)';
+
+        const groundY = height / 2 + GROUND_Y_OFFSET;
+
+        const drawMesa = (x, w, h) => {
+            const y = groundY - 30;
+            const grad = cx.createLinearGradient(x, y - h, x, y);
+            grad.addColorStop(0, '#8D6E63');
+            grad.addColorStop(1, '#4E342E');
+            cx.fillStyle = grad;
+
+            cx.beginPath();
+            cx.moveTo(x - w/2, y);
+            cx.lineTo(x - w/3, y - h);
+            cx.lineTo(x + w/3, y - h);
+            cx.lineTo(x + w/2, y);
+            cx.closePath();
+            cx.fill();
+
+            cx.save();
+            cx.clip();
+            cx.globalCompositeOperation = 'source-atop';
+            for(let i = 0; i < h; i += Math.random() * 15 + 5) {
+                cx.fillStyle = Math.random() > 0.5 ? 'rgba(62, 39, 35, 0.2)' : 'rgba(161, 136, 127, 0.1)';
+                cx.fillRect(x - w/2, y - h + i, w, Math.random() * 8 + 2);
+            }
+            cx.restore();
+        };
+
+        drawMesa(width * 0.2, 350, 180);
+        drawMesa(width * 0.55, 600, 300);
+        drawMesa(width * 0.88, 250, 120);
+        return c;
+    }
+
+    function drawCactus(cx, x, y, scale, color) {
+        cx.lineWidth = 6 * scale;
+        cx.strokeStyle = color;
+        cx.lineCap = 'round';
+        cx.beginPath();
+        cx.moveTo(x, y);
+        cx.lineTo(x, y - 50 * scale);
+        cx.moveTo(x, y - 20 * scale);
+        cx.quadraticCurveTo(x - 20 * scale, y - 20 * scale, x - 20 * scale, y - 35 * scale);
+        cx.moveTo(x, y - 30 * scale);
+        cx.quadraticCurveTo(x + 20 * scale, y - 30 * scale, x + 20 * scale, y - 45 * scale);
+        cx.stroke();
+    }
+
+    function createSeamlessDesertLayer(colorBase, colorDark, bushColor, yBase, amplitude, density, blurAmt, addCacti = false) {
+        const c = document.createElement('canvas');
+        c.width = patternWidth;
+        c.height = Math.max(1, height);
+        const cx = c.getContext('2d');
+
+        cx.filter = `blur(${blurAmt}px)`;
+
+        const hillGrad = cx.createLinearGradient(0, yBase - amplitude, 0, height);
+        hillGrad.addColorStop(0, colorBase);
+        hillGrad.addColorStop(1, colorDark);
+        cx.fillStyle = hillGrad;
+
+        cx.beginPath();
+        cx.moveTo(0, height);
+        const freq = (Math.PI * 4) / patternWidth;
+        for(let x=0; x<=patternWidth; x+=10) {
+            const h = Math.sin(x * freq) * amplitude;
+            const noise = Math.sin(x * freq * 12) * (amplitude * 0.08);
+            cx.lineTo(x, yBase - h - noise);
+        }
+        cx.lineTo(patternWidth, height);
+        cx.lineTo(0, height);
+        cx.fill();
+
+        for(let x=0; x<patternWidth; x+= (120 / density)) {
+            const h = Math.sin(x * freq) * amplitude;
+            const noise = Math.sin(x * freq * 12) * (amplitude * 0.08);
+            const landY = yBase - h - noise;
+            const randX = x + (Math.random() * 40 - 20);
+
+            if (addCacti && Math.random() > 0.85) {
+                const cScale = 0.4 + Math.random() * 0.4;
+                const drawC = (bx) => drawCactus(cx, bx, landY + 5, cScale, bushColor);
+                drawC(randX);
+                if (randX + 50 > patternWidth) drawC(randX - patternWidth);
+                if (randX - 50 < 0) drawC(randX + patternWidth);
+            }
+            else if (Math.random() > 0.4) {
+                cx.fillStyle = bushColor;
+                const size = 8 + Math.random() * 12;
+                const drawBush = (bx) => {
+                    cx.beginPath();
+                    cx.ellipse(bx, landY, size, size * 0.6, 0, 0, Math.PI * 2);
+                    cx.fill();
+                };
+                drawBush(randX);
+                if (randX + size > patternWidth) drawBush(randX - patternWidth);
+                if (randX - size < 0) drawBush(randX + patternWidth);
+            }
+        }
+        return c;
+    }
+
+    function createForegroundLayer() {
+        const c = document.createElement('canvas');
+        c.width = patternWidth;
+        c.height = Math.max(1, height);
+        const cx = c.getContext('2d');
+
+        cx.filter = 'blur(6px)';
+        const groundY = height / 2 + GROUND_Y_OFFSET;
+        cx.fillStyle = '#21120F';
+
+        for(let x=0; x<patternWidth; x+= 800) {
+            const randX = x + Math.random() * 100;
+            const y = height + 20;
+
+            if (Math.random() > 0.7) {
+                drawCactus(cx, randX, y, 1.5, '#21120F');
+            } else {
+                cx.beginPath();
+                cx.arc(randX, y, 60, 0, Math.PI * 2);
+                cx.arc(randX + 50, y + 10, 80, 0, Math.PI * 2);
+                cx.fill();
+            }
+        }
+        return c;
+    }
+
+    function generateBackgrounds() {
+        const groundY = height / 2 + GROUND_Y_OFFSET;
+        mesaLayer = createMesaLayer();
+        midDesertLayer = createSeamlessDesertLayer('#A1887F', '#5D4037', '#3E2723', groundY - 80, 40, 1.0, 2.0, true);
+        frontDesertLayer = createSeamlessDesertLayer('#D7CCC8', '#8D6E63', '#4E342E', groundY - 20, 30, 1.5, 0.5, false);
+        foregroundLayer = createForegroundLayer();
+    }
+
+    resize();
+
+    function initVultures() {
+        vultures = [];
+        for(let i=0; i<5; i++) {
+            vultures.push({
+                angle: Math.random() * Math.PI * 2,
+                speed: 0.003 + Math.random() * 0.004,
+                centerX: width * (0.1 + Math.random() * 0.8),
+                centerY: height * (0.15 + Math.random() * 0.2),
+                radiusX: 60 + Math.random() * 100,
+                radiusY: 20 + Math.random() * 40,
+                flapSpeed: 0.15 + Math.random() * 0.1,
+                flapOffset: Math.random() * 10,
+                size: 0.8 + Math.random() * 0.5
+            });
+        }
+    }
+
+    function initStars() {
+        stars = [];
+        for(let i=0; i<100; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * (height * 0.6),
+                size: Math.random() * 1.5,
+                twinkleOffset: Math.random() * 100
+            });
+        }
+    }
+
+    initVultures();
+    initStars();
+
+    function updateAndDrawShootingStar(dayProgress) {
+        if (dayProgress < 0.7) return;
+
+        if (!shootingStar.active && Math.random() < 0.00015) {
+            shootingStar.active = true;
+            shootingStar.x = width * (0.2 + Math.random() * 0.6);
+            shootingStar.y = height * (0.1 + Math.random() * 0.3);
+            shootingStar.vx = - (4 + Math.random() * 3);
+            shootingStar.vy = 1.5 + Math.random() * 2;
+            shootingStar.life = 1.0;
+        }
+
+        if (shootingStar.active) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = shootingStar.life * 0.9;
+            ctx.strokeStyle = 'rgba(255, 255, 230, 1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(shootingStar.x, shootingStar.y);
+            ctx.lineTo(shootingStar.x - shootingStar.vx * 3, shootingStar.y - shootingStar.vy * 3);
+            ctx.stroke();
+            ctx.restore();
+
+            shootingStar.x += shootingStar.vx;
+            shootingStar.y += shootingStar.vy;
+            shootingStar.life -= 0.02;
+
+            if (shootingStar.life <= 0 || shootingStar.x < -50 || shootingStar.y > height * 0.8) {
+                shootingStar.active = false;
+            }
+        }
+    }
+
+    function updateAndDrawGhostRider(groundY, t) {
+        // Very rare spawn
+        if (!ghostRider.active && Math.random() < 0.00005) {
+            ghostRider.active = true;
+            ghostRider.x = width + 150;
+            ghostRider.y = groundY - 80;
+            ghostRider.life = 1.0;
+        }
+
+        if (ghostRider.active) {
+            ghostRider.x -= 1.0;
+            ghostRider.life -= 0.002;
+
+            const alpha = Math.max(0, Math.min(0.35, ghostRider.life * 0.35));
+            ctx.save();
+            ctx.filter = 'blur(2px)';
+            ctx.globalAlpha = alpha;
+            ctx.translate(ghostRider.x, ghostRider.y);
+            const s = 0.6;
+            ctx.scale(s, s);
+            ctx.fillStyle = '#12070a';
+
+            // Simple distant horse + rider silhouette
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 40, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(35, -10, 12, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(8, -28, 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(0, -26);
+            ctx.lineTo(-30, -10);
+            ctx.lineTo(-5, -8);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(5, -40, 7, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-2, -40, 14, 4);
+
+            ctx.restore();
+
+            if (ghostRider.life <= 0 || ghostRider.x < -200) {
+                ghostRider.active = false;
+            }
+        }
+    }
+
+    // --- Physics Helpers ---
+    function solveIK(startX, startY, targetX, targetY, len1, len2, bendDir) {
+        const dx = targetX - startX;
+        const dy = targetY - startY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const maxReach = len1 + len2;
+        let safeDist = dist;
+        if (dist > maxReach * 0.99) safeDist = maxReach * 0.99;
+        safeDist = Math.max(safeDist, Math.abs(len1 - len2) + 0.1);
+        const angleFromDirect = Math.acos((len1 * len1 + safeDist * safeDist - len2 * len2) / (2 * len1 * safeDist));
+        const baseAngle = Math.atan2(dy, dx);
+        const totalAngle = baseAngle + (angleFromDirect * bendDir);
+        return { x: startX + Math.cos(totalAngle) * len1, y: startY + Math.sin(totalAngle) * len1 };
+    }
+
+    // --- Dust System ---
+    function createDust(x, y) {
+        // Base dust count with variation
+        const baseCount = 4 + Math.random() * 4;
+        const intensity = dustIntensity || 1.0;
+        const count = Math.max(2, Math.round(baseCount * (0.7 + intensity * 0.6)));
+
+        for (let i = 0; i < count; i++) {
+            const dirJitter = (Math.random() - 0.5) * 0.6;
+            const sizeMul = 0.7 + intensity * 0.6;
+            const horizMul = 0.6 + intensity * 0.7;
+            const vertMul = 0.5 + intensity * 0.5;
+
+            particles.push({
+                x: x,
+                y: y,
+                // Faster, longer puffs at higher speed / tiredness
+                vx: (-8 - Math.random() * 10) * horizMul + dirJitter,
+                vy: (-3 - Math.random() * 8) * vertMul,
+                size: (8 + Math.random() * 15) * sizeMul,
+                life: 1.0,
+                decay: 0.02 + Math.random() * 0.02,
+                colorVar: Math.random()
+            });
+        }
+    }
+
+    function drawParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.size += 0.5;
+            p.life -= p.decay;
+
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+            } else {
+                // Slight warm vs cool dust tone variation
+                const warm = p.colorVar > 0.5;
+                const r = warm ? 190 : 140;
+                const g = warm ? 160 : 120;
+                const b = warm ? 135 : 105;
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.life * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    function drawMuscleSegment(x1, y1, x2, y2, wStart, wEnd, bulge, bulgePos = 0.5, color, topBulge = 0) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.translate(x1, y1);
+        ctx.rotate(angle);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, -wStart/2);
+        ctx.quadraticCurveTo(dist/2, -wEnd/2 - topBulge, dist, -wEnd/2);
+        ctx.lineTo(dist, wEnd/2);
+        ctx.quadraticCurveTo(dist * bulgePos, wEnd/2 + bulge, 0, wStart/2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawLoopingLayer(layerCanvas, scrollX) {
+        if (!layerCanvas || layerCanvas.width === 0) return;
+        const w = layerCanvas.width;
+        let x = Math.floor(-(scrollX % w));
+        if (x > 0) x -= w;
+        for (let drawX = x; drawX < width; drawX += w) {
+            ctx.drawImage(layerCanvas, drawX, 0);
+        }
+    }
+
+    // --- EFFECTS ---
+    function drawFilmGrain() {
+        ctx.save();
+        ctx.globalCompositeOperation = 'overlay';
+        const baseTintAlpha = cameraMode ? 0.12 : 0.25;
+        ctx.fillStyle = `rgba(139, 69, 19, ${baseTintAlpha})`;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.globalCompositeOperation = 'source-over';
+        const washAlpha = cameraMode ? 0.04 : 0.08;
+        ctx.fillStyle = `rgba(80, 40, 20, ${washAlpha})`;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+
+        const veilAlpha = cameraMode ? 0.12 : 0.25;
+        ctx.fillStyle = `rgba(120, 100, 70, ${veilAlpha})`;
+        ctx.fillRect(0, 0, width, height);
+
+        const grad = ctx.createRadialGradient(width/2, height/2, height/3, width/2, height/2, height);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        const speckCount = cameraMode ? 60 : 150;
+        const speckAlpha = cameraMode ? 0.08 : 0.15;
+        ctx.fillStyle = `rgba(0,0,0,${speckAlpha})`;
+        for(let i=0; i<speckCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const s = Math.random() * 3;
+            ctx.fillRect(x, y, s, s);
+        }
+
+        if (!cameraMode) {
+            if (Math.random() > 0.92) {
+                scratchX = Math.random() * width;
+                scratchTimer = 3;
+            }
+            if (scratchTimer > 0) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.random() * 0.4})`;
+                ctx.lineWidth = 1 + Math.random();
+                ctx.beginPath();
+                ctx.moveTo(scratchX, 0);
+                ctx.lineTo(scratchX + (Math.random()*2-1), height);
+                ctx.stroke();
+                scratchTimer--;
+            }
+
+            if (cueDotActive > 0) {
+                ctx.save();
+                ctx.translate(width - 50, 60);
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.beginPath();
+                ctx.arc(0, 0, 18, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fill();
+
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.beginPath();
+                ctx.arc(0, 0, 12, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(50, 20, 0, 0.3)';
+                ctx.fill();
+                ctx.restore();
+                cueDotActive--;
+            } else {
+                cueDotTimer--;
+                if (cueDotTimer <= 0) {
+                    cueDotActive = 8;
+                    cueDotTimer = Math.random() * 800 + 400;
+                }
+            }
+        } else {
+            // In camera mode, let timers still tick down but don't draw scratches/dots
+            if (scratchTimer > 0) {
+                scratchTimer--;
+            }
+            if (cueDotActive > 0) {
+                cueDotActive--;
+            } else {
+                if (cueDotTimer > 0) cueDotTimer--;
+                if (cueDotTimer <= 0) {
+                    cueDotActive = 0;
+                    cueDotTimer = Math.random() * 800 + 400;
+                }
+            }
+        }
+    }
+
+    function drawTumbleweed(x, y, radius, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.strokeStyle = '#4E342E';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for(let i=0; i<8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const r = radius * (0.8 + Math.random()*0.4);
+            ctx.moveTo(Math.cos(angle)*r*0.5, Math.sin(angle)*r*0.5);
+            ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
+            ctx.moveTo(Math.random()*r - r/2, Math.random()*r - r/2);
+            ctx.lineTo(Math.random()*r - r/2, Math.random()*r - r/2);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawSunRays(cx, cy) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(time * 0.05);
+        ctx.fillStyle = 'rgba(255, 255, 230, 0.05)';
+        for(let i=0; i<12; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, width, i * (Math.PI/6), i * (Math.PI/6) + 0.2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawVultures() {
+        ctx.strokeStyle = '#21120F';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.save();
+        ctx.filter = 'blur(1px)';
+        vultures.forEach(v => {
+            v.angle += v.speed;
+            const vx = v.centerX + Math.cos(v.angle) * v.radiusX;
+            const vy = v.centerY + Math.sin(v.angle) * v.radiusY;
+            const flap = Math.sin(time * v.flapSpeed + v.flapOffset) * 5;
+            ctx.beginPath();
+            ctx.moveTo(vx, vy);
+            ctx.quadraticCurveTo(vx - (10*v.size), vy - (5*v.size) + flap, vx - (20*v.size), vy + flap);
+            ctx.moveTo(vx, vy);
+            ctx.quadraticCurveTo(vx + (10*v.size), vy - (5*v.size) + flap, vx + (20*v.size), vy + flap);
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+
+    function updateAndDrawWindmill(groundY, t) {
+        if (!windmill.active && Math.random() < 0.0007) {
+            windmill.active = true;
+            windmill.x = width + 50;
+        }
+
+        if (windmill.active) {
+            windmill.x -= 0.5 * speedFactor;
+            windmill.bladeAngle += 0.02;
+
+            const hazeWobble = Math.sin(t * 0.2 + (groundY-30)*0.02) * 3;
+            const wx = windmill.x + hazeWobble;
+            const wy = groundY - 30;
+
+            ctx.save();
+            ctx.filter = 'blur(2px)';
+
+            ctx.fillStyle = '#2d1e18';
+            ctx.beginPath();
+            ctx.moveTo(wx, wy);
+            ctx.lineTo(wx - 10, wy);
+            ctx.lineTo(wx - 4, wy - 60);
+            ctx.lineTo(wx + 4, wy - 60);
+            ctx.lineTo(wx + 10, wy);
+            ctx.fill();
+
+            ctx.translate(wx, wy - 60);
+            ctx.rotate(windmill.bladeAngle);
+            ctx.fillStyle = '#2d1e18';
+            for(let i=0; i<4; i++) {
+                ctx.beginPath();
+                ctx.rect(-2, 0, 4, -45);
+                ctx.fill();
+                ctx.rotate(Math.PI/2);
+            }
+            ctx.restore();
+
+            if (windmill.x < -100) windmill.active = false;
+        }
+    }
+
+    function updateAndDrawTown(groundY, t) {
+        // Town appears a bit more often the further you ride,
+        // so it feels like you're actually approaching somewhere.
+        let spawnChance = 0.00018;
+        const townDistancePhase = Math.max(0, Math.min(1, milesRidden / 20));
+        spawnChance += townDistancePhase * 0.0009;
+
+        if (!town.active && Math.random() < spawnChance) {
+            town.active = true;
+            town.x = width + 200;
+        }
+
+        if (town.active) {
+            town.x -= 0.5 * speedFactor;
+            const tx = town.x;
+            const ty = groundY - 25;
+
+            const hazeWobble = Math.sin(t * 0.2 + (groundY-30)*0.02) * 3;
+            const finalX = tx + hazeWobble;
+
+            ctx.save();
+            ctx.filter = 'blur(2px)';
+            ctx.fillStyle = '#251610';
+
+            ctx.fillRect(finalX, ty - 80, 40, 30);
+            ctx.beginPath();
+            ctx.moveTo(finalX - 5, ty - 80);
+            ctx.lineTo(finalX + 20, ty - 95);
+            ctx.lineTo(finalX + 45, ty - 80);
+            ctx.fill();
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#251610';
+            ctx.beginPath();
+            ctx.moveTo(finalX + 5, ty - 50); ctx.lineTo(finalX, ty);
+            ctx.moveTo(finalX + 35, ty - 50); ctx.lineTo(finalX + 40, ty);
+            ctx.moveTo(finalX + 5, ty - 50); ctx.lineTo(finalX + 35, ty - 20);
+            ctx.moveTo(finalX + 35, ty - 50); ctx.lineTo(finalX + 5, ty - 20);
+            ctx.stroke();
+
+            ctx.fillRect(finalX + 60, ty - 50, 40, 50);
+            ctx.beginPath();
+            ctx.moveTo(finalX + 55, ty - 50);
+            ctx.lineTo(finalX + 80, ty - 90);
+            ctx.lineTo(finalX + 105, ty - 50);
+            ctx.fill();
+            ctx.fillRect(finalX + 78, ty - 105, 4, 15);
+            ctx.fillRect(finalX + 72, ty - 100, 16, 4);
+
+            ctx.fillRect(finalX + 120, ty - 40, 50, 40);
+            ctx.fillRect(finalX + 120, ty - 55, 50, 15);
+            ctx.fillRect(finalX + 175, ty - 35, 40, 35);
+            ctx.fillRect(finalX + 175, ty - 45, 40, 10);
+
+            // Lonely lit window in one building
+            const glow = 0.5 + 0.5 * Math.sin(t * 0.15);
+            ctx.fillStyle = `rgba(255, 230, 150, ${0.4 + glow * 0.4})`;
+            ctx.fillRect(finalX + 72, ty - 38, 14, 16);
+            ctx.fillStyle = `rgba(255, 200, 120, 0.18)`;
+            ctx.beginPath();
+            ctx.ellipse(finalX + 79, ty - 30, 20, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            if (town.x < -400) town.active = false;
+        }
+    }
+
+    function updateAndDrawTelegraphPoles(groundY, speed) {
+        poleTimer -= speed;
+        if (poleTimer <= 0) {
+            telegraphPoles.push({ x: width + 50 });
+            poleTimer = 350;
+        }
+
+        const ty = groundY + 50;
+
+        ctx.save();
+        ctx.filter = 'blur(1px)';
+        ctx.strokeStyle = '#21120F';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        for (let i = 0; i < telegraphPoles.length; i++) {
+            let pole = telegraphPoles[i];
+            pole.x -= speed;
+
+            ctx.beginPath();
+            ctx.moveTo(pole.x, ty);
+            ctx.lineTo(pole.x, ty - 140);
+            ctx.stroke();
+
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(pole.x - 15, ty - 120);
+            ctx.lineTo(pole.x + 15, ty - 120);
+            ctx.stroke();
+
+            ctx.fillStyle = '#21120F';
+            ctx.beginPath();
+            ctx.arc(pole.x - 12, ty - 122, 3, 0, Math.PI*2);
+            ctx.arc(pole.x + 12, ty - 122, 3, 0, Math.PI*2);
+            ctx.fill();
+
+            if (i > 0) {
+                let prevPole = telegraphPoles[i-1];
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(40, 20, 10, 0.6)';
+                ctx.beginPath();
+
+                ctx.moveTo(pole.x - 12, ty - 122);
+                ctx.bezierCurveTo(
+                    pole.x - (pole.x - prevPole.x)/2, ty - 100,
+                    prevPole.x + 12 + (pole.x - prevPole.x)/2, ty - 100,
+                    prevPole.x + 12, ty - 122
+                );
+
+                ctx.moveTo(pole.x + 12, ty - 122);
+                ctx.bezierCurveTo(
+                    pole.x - (pole.x - prevPole.x)/2, ty - 90,
+                    prevPole.x - 12 + (pole.x - prevPole.x)/2, ty - 90,
+                    prevPole.x - 12, ty - 122
+                );
+                ctx.stroke();
+            } else {
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(40, 20, 10, 0.6)';
+                ctx.beginPath();
+                ctx.moveTo(pole.x - 12, ty - 122);
+                ctx.lineTo(pole.x - 400, ty - 100);
+                ctx.stroke();
+            }
+        }
+
+        if (telegraphPoles.length > 0 && telegraphPoles[0].x < -50) {
+            telegraphPoles.shift();
+        }
+
+        ctx.restore();
+    }
+
+    function updateAndDrawTrain(groundY, t) {
+        if (!train.active && Math.random() < 0.00035) {
+            train.active = true;
+            train.x = width + 100;
+        }
+
+        if (train.active) {
+            train.x -= 0.8 * speedFactor;
+
+            const tx = train.x;
+            const ty = groundY - 25;
+
+            if (Math.random() > 0.6) {
+                train.smoke.push({
+                    x: tx + 40,
+                    y: ty - 30,
+                    vx: 1 + Math.random(),
+                    vy: -1 - Math.random(),
+                    size: 5 + Math.random() * 5,
+                    life: 1.0
+                });
+            }
+
+            ctx.save();
+            ctx.filter = 'blur(2px)';
+            ctx.fillStyle = '#1a0d0a';
+
+            ctx.fillRect(tx, ty - 20, 40, 20);
+            ctx.fillRect(tx + 25, ty - 35, 10, 15);
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx - 10, ty + 5);
+            ctx.lineTo(tx, ty - 10);
+            ctx.fill();
+
+            for(let i=1; i<4; i++) {
+                ctx.fillRect(tx + (i*45), ty - 18, 40, 18);
+                ctx.fillRect(tx + (i*45) - 4, ty - 5, 4, 2);
+            }
+
+            ctx.fillStyle = 'rgba(80, 70, 60, 0.4)';
+            for(let i=train.smoke.length-1; i>=0; i--) {
+                const s = train.smoke[i];
+                s.x += s.vx;
+                s.y += s.vy;
+                s.size += 0.2;
+                s.life -= 0.02;
+                if(s.life <= 0) train.smoke.splice(i, 1);
+                else {
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.restore();
+
+            if (train.x < -400) train.active = false;
+        }
+    }
+
+    function spawnProp(groundY) {
+        const typeRoll = Math.random();
+        let type = 'FENCE';
+
+        if (typeRoll < 0.25) {
+            type = 'SKULL';
+        } else if (typeRoll < 0.5) {
+            type = 'WHEEL';
+        } else if (typeRoll < 0.75) {
+            type = 'BARREL';
+        } else if (typeRoll < 0.9) {
+            type = 'FENCE';
+        } else {
+            type = 'WANTED';
+        }
+
+        fgProps.push({
+            type: type,
+            x: width + 100,
+            y: groundY + 150,
+            rot: Math.random() * 0.5 - 0.25,
+            scale: 0.8 + Math.random() * 0.5
+        });
+    }
+
+    
+    function spawnMileMarker(mileNumber, groundY) {
+        // Mile markers spawn as simple signposts nearer to the camera,
+        // with a tiny engraved-like number, so distance feels in-world.
+        fgProps.push({
+            type: 'MILE',
+            x: width + 160,
+            y: groundY + 150,
+            rot: (Math.random() * 0.18) - 0.09,
+            scale: 0.9,
+            mile: mileNumber
+        });
+    }
+
+function updateAndDrawProps(speed) {
+        const groundY = height/2 + GROUND_Y_OFFSET;
+
+        if (Math.random() < 0.008) {
+            spawnProp(groundY);
+        }
+
+        if (fgProps.length > 0) {
+            ctx.save();
+            ctx.filter = 'blur(5px)';
+
+            for (let i = fgProps.length - 1; i >= 0; i--) {
+                const p = fgProps[i];
+                p.x -= speed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.scale(p.scale, p.scale);
+                ctx.rotate(p.rot);
+
+                ctx.fillStyle = '#21120F';
+                ctx.strokeStyle = '#21120F';
+                ctx.lineWidth = 4;
+                ctx.lineJoin = 'round';
+
+                if (p.type === 'SKULL') {
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-10, -30);
+                    ctx.bezierCurveTo(-30, -40, -50, -20, -60, -50);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(10, -30);
+                    ctx.bezierCurveTo(30, -40, 50, -20, 60, -50);
+                    ctx.moveTo(-12, -20);
+                    ctx.lineTo(12, -20);
+                    ctx.lineTo(8, 20);
+                    ctx.lineTo(-8, 20);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                else if (p.type === 'WHEEL') {
+                    p.rot -= 0.05;
+                    ctx.rotate(p.rot * 2);
+                    ctx.beginPath();
+                    ctx.arc(0, -40, 40, 0, Math.PI*1.8);
+                    ctx.stroke();
+                    ctx.lineWidth = 2;
+                    for(let k=0; k<4; k++) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -40);
+                        ctx.lineTo(Math.cos(k*1.5)*35, -40 + Math.sin(k*1.5)*35);
+                        ctx.stroke();
+                    }
+                }
+                else if (p.type === 'BARREL') {
+                    ctx.fillRect(-25, -60, 50, 60);
+                    ctx.strokeRect(-25, -60, 50, 10);
+                    ctx.strokeRect(-25, -10, 50, 10);
+                }
+                else if (p.type === 'FENCE') {
+                    ctx.fillRect(-10, -90, 15, 90);
+                    ctx.fillRect(40, -80, 12, 80);
+                    ctx.fillRect(90, -95, 15, 95);
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -70); ctx.lineTo(110, -75);
+                    ctx.moveTo(-10, -40); ctx.lineTo(110, -35);
+                    ctx.stroke();
+                }
+                else if (p.type === 'WANTED') {
+                    // Foreground signpost with torn WANTED poster
+                    ctx.save();
+                    ctx.rotate(-0.08);
+                    // Post
+                    ctx.fillRect(-5, -110, 10, 110);
+                    // Cross-beam
+                    ctx.fillRect(-40, -110, 80, 8);
+
+                    // Poster base
+                    const baseColor = (wantedMatchTimer > 0)
+                        ? '#5a3320'
+                        : '#3b2419';
+                    ctx.fillStyle = baseColor;
+                    ctx.fillRect(-24, -100, 48, 60);
+
+                    // Simple head/torso silhouette, slightly more like our rider when highlighted
+                    const glow = wantedMatchTimer > 0 ? (0.4 + 0.3 * Math.sin(time * 0.18)) : 0.0;
+                    ctx.fillStyle = '#140904';
+                    // Exaggerated hat + shoulders when matched
+                    if (wantedMatchTimer > 0) {
+                        ctx.fillRect(-10, -92, 20, 16);   // taller head
+                        ctx.fillRect(-16, -76, 32, 8);    // wide shoulders
+                        ctx.fillRect(-18, -96, 36, 4);    // hat brim
+                        ctx.fillStyle = `rgba(255, 220, 180, ${0.15 + glow * 0.3})`;
+                        ctx.beginPath();
+                        ctx.ellipse(0, -72, 20, 12, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#140904';
+                    } else {
+                        ctx.fillRect(-8, -88, 16, 18);   // head
+                        ctx.fillRect(-12, -70, 24, 6);   // shoulders
+                    }
+
+                    // "$" hint line at bottom
+                    ctx.beginPath();
+                    ctx.moveTo(-16, -48);
+                    ctx.lineTo(16, -46);
+                    ctx.lineTo(14, -42);
+                    ctx.lineTo(-16, -44);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+                else if (p.type === 'MILE') {
+                    // Mile marker signpost with a simple number
+                    ctx.save();
+                    ctx.rotate(-0.03);
+                    // Post
+                    ctx.fillRect(-3, -100, 6, 100);
+                    // Sign board
+                    ctx.fillRect(-18, -110, 36, 26);
+                    ctx.fillStyle = '#D7CCC8';
+                    ctx.fillRect(-16, -108, 32, 22);
+                    ctx.fillStyle = '#21120F';
+                    ctx.font = '16px "DM Sans", system-ui, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(String(p.mile || 0), 0, -97);
+                    ctx.restore();
+                }
+
+                ctx.restore();
+
+                if (p.x < -300) fgProps.splice(i, 1);
+            }
+            ctx.restore();
+        }
+    }
+    function draw() {
+if (Math.random() < 0.02) {
+             requestAnimationFrame(draw);
+             return;
+        }
+
+        filmJitterY = cameraMode ? 0 : (Math.random() - 0.5) * 1.5;
+        if (reducedMotion) filmJitterY *= 0.4;
+
+        ctx.save();
+        ctx.translate(0, filmJitterY);
+
+        dayCycleTimer += 16;
+        let dayProgress = dayCycleTimer / DAY_DURATION;
+        if (dayProgress > 1) dayProgress = 1;
+
+        // Distance-based sky darkening: long rides nudge the sky further toward dusk
+        const skyDistancePhase = Math.max(0, Math.min(1, milesRidden / 20));
+        const skyProgress = Math.min(1, dayProgress + skyDistancePhase * 0.25);
+
+        const skyTop = lerpColor(227, 242, 253,  20, 10, 30, skyProgress);
+        const skyBot = lerpColor(255, 249, 196,  60, 30, 60, skyProgress);
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, skyTop);
+        gradient.addColorStop(0.6, skyBot);
+        gradient.addColorStop(1, '#D7CCC8');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        if (dayProgress > 0.6) {
+            const starAlpha = (dayProgress - 0.6) * 2.5;
+            ctx.fillStyle = `rgba(255, 255, 255, ${starAlpha})`;
+            stars.forEach(s => {
+                const twinkle = Math.sin(time * 0.1 + s.twinkleOffset) * 0.5 + 0.5;
+                ctx.globalAlpha = starAlpha * twinkle;
+                ctx.beginPath();
+                ctx.rect(s.x, s.y, s.size, s.size);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            // Rare shooting star
+            updateAndDrawShootingStar(dayProgress);
+        }
+
+        if (lightningTimer > 0) {
+            lightningTimer--;
+            const flashOpacity = (Math.random() * 0.4 + 0.1);
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const flashGrad = ctx.createLinearGradient(0, 0, 0, height/2 + 100);
+            flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashOpacity})`);
+            flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = flashGrad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+        } else {
+            if (Math.random() < 0.002) {
+                lightningTimer = 3 + Math.random() * 5;
+            }
+        }
+
+        // Dust band level will be adjusted later based on distance, fatigue and time-of-day.
+        // Here we just keep it safely clamped.
+        if (dustStormProgress < 0) dustStormProgress = 0;
+        if (dustStormProgress > 0.8) dustStormProgress = 0.8;
+
+        // Subtle terrain undulation based on distance and time:
+        // very long wavelength so it feels like gentle hills, not bumpy.
+        const terrainPhase = milesRidden * 0.15 + time * 0.0008;
+        const terrainOffset = Math.sin(terrainPhase) * 22;
+
+        const groundY = height / 2 + GROUND_Y_OFFSET + terrainOffset;
+        const dustH = 200 + (dustStormProgress * 150);
+
+        const dustGrad = ctx.createLinearGradient(0, groundY - dustH, 0, groundY);
+        dustGrad.addColorStop(0, 'rgba(93, 64, 55, 0)');
+        dustGrad.addColorStop(1, `rgba(62, 39, 35, ${dustStormProgress})`);
+
+        ctx.fillStyle = dustGrad;
+        ctx.fillRect(0, groundY - dustH, width, dustH);
+
+        const sunX = width * 0.8;
+        const sunY = height * 0.15 + (dayProgress * 150);
+        drawSunRays(sunX, sunY);
+
+        const sunR = lerpColor(255, 255, 230, 255, 100, 50, dayProgress);
+        const sunGrad = ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 70);
+        sunGrad.addColorStop(0, sunR);
+        sunGrad.addColorStop(0.5, 'rgba(255, 200, 100, 0.4)');
+        sunGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 70, 0, Math.PI*2);
+        ctx.fill();
+
+        time += window.performance.now() * 0.000005;
+        const t = Date.now() * SPEED_MULTIPLIER * speedFactor;
+        const stridePhase = ((t * 0.6) % (Math.PI * 2)) / (Math.PI * 2);
+        const cinematicMode = cameraMode && uiHidden;
+        const baseParallax = cameraMode ? 0.6 : 1.0;
+        const parallaxFactor = cinematicMode ? baseParallax * 0.75 : baseParallax;
+
+        // --- Ride timer & distance counter ---
+        const nowTime = performance.now();
+        if (rideStartTime === null) {
+            rideStartTime = nowTime;
+            lastFrameTime = nowTime;
+        }
+        let dtSec = 0;
+        if (lastFrameTime !== null) {
+            dtSec = Math.max(0, (nowTime - lastFrameTime) / 1000);
+            lastFrameTime = nowTime;
+        }
+        const elapsedSec = (nowTime - rideStartTime) / 1000;
+
+        // Simple "tiredness" curves over very long rides
+        // Soft fatigue: after ~3–5 minutes, bobbing and neck dip increase slightly
+        const tiredSoft = Math.max(0, Math.min(1, (elapsedSec - 180) / 120));
+        // Dust fatigue: after ~8–12 minutes, dust density creeps up a bit
+        const tiredDust = Math.max(0, Math.min(1, (elapsedSec - 480) / 240));
+
+        // --- Chapter card timing (distance-based) ---
+        const CHAPTER_FADE_IN  = 2.0;
+        const CHAPTER_HOLD     = 7.0;
+        const CHAPTER_FADE_OUT = 2.0;
+
+        if (chapterPhase === 'idle' && chapterIndex < chapterLines.length && milesRidden >= nextChapterMile) {
+            chapterPhase = 'fadeIn';
+            chapterPhaseTimer = 0;
+            chapterAlpha = 0;
+            chapterActiveIndex = chapterIndex;
+            chapterIndex++;
+        } else if (chapterPhase === 'fadeIn') {
+            chapterPhaseTimer += dtSec;
+            chapterAlpha = Math.min(1, chapterPhaseTimer / CHAPTER_FADE_IN);
+            if (chapterPhaseTimer >= CHAPTER_FADE_IN) {
+                chapterPhase = 'hold';
+                chapterPhaseTimer = 0;
+                chapterAlpha = 1;
+            }
+        } else if (chapterPhase === 'hold') {
+            chapterPhaseTimer += dtSec;
+            chapterAlpha = 1;
+            if (chapterPhaseTimer >= CHAPTER_HOLD) {
+                chapterPhase = 'fadeOut';
+                chapterPhaseTimer = 0;
+            }
+        } else if (chapterPhase === 'fadeOut') {
+            chapterPhaseTimer += dtSec;
+            chapterAlpha = Math.max(0, 1 - (chapterPhaseTimer / CHAPTER_FADE_OUT));
+            if (chapterPhaseTimer >= CHAPTER_FADE_OUT) {
+                chapterPhase = 'idle';
+                chapterPhaseTimer = 0;
+                chapterAlpha = 0;
+                chapterActiveIndex = -1;
+
+                if (chapterIndex < chapterMiles.length) {
+                    nextChapterMile = chapterMiles[chapterIndex];
+                } else {
+                    nextChapterMile = Infinity;
+                }
+            }
+        }
+
+        // Fake miles ridden at ~12 mph base, scaled by speedFactor
+        const BASE_SPEED_MPH = 12;
+        const milesPerSec = BASE_SPEED_MPH / 3600;
+        milesRidden += milesPerSec * dtSec * speedFactor;
+
+        // Distance-based mile markers: spawn an in-world sign each time we cross a whole mile.
+        const currentMile = Math.floor(milesRidden);
+        if (currentMile > lastMileMarker) {
+            // Use the terrain-aware groundY so the marker sits on the dust band edge.
+            spawnMileMarker(currentMile, groundY);
+            lastMileMarker = currentMile;
+        }
+
+        // Speed-based dust: jog = softer, fast gallop = stronger puffs
+        let speedTerm = 1;
+        if (speedFactor < 0.8) {
+            const jf = (0.8 - speedFactor) / 0.3;
+            speedTerm = 1 - jf * 0.4;
+        } else if (speedFactor > 1.2) {
+            const gf = (speedFactor - 1.2) / 0.3;
+            speedTerm = 1 + gf * 0.7;
+        }
+
+        const dustTiredMul = 1 + tiredDust * 0.25;
+        dustIntensity = Math.max(0.4, speedTerm * dustTiredMul);
+        if (cinematicMode) {
+            dustIntensity *= 0.7;
+        }
+
+        // Environment response: dust band reacts softly to distance, fatigue, and time of day
+        {
+            const distTerm = Math.min(0.5, milesRidden / 12);
+            const fatigueTerm = tiredDust * 0.22;
+            let dayTerm = 0;
+            if (dayProgress < 0.5) {
+                dayTerm = dayProgress * 0.25;
+            } else {
+                dayTerm = (1.0 - dayProgress) * 0.2;
+            }
+            const targetDust = Math.min(0.7, 0.08 + distTerm + fatigueTerm + dayTerm);
+            // Ease towards the target so it feels gradual, not popping
+            dustStormProgress += (targetDust - dustStormProgress) * 0.02;
+        }
+
+        const mins = Math.floor(elapsedSec / 60);
+        const secs = Math.floor(elapsedSec % 60);
+        const mm = String(mins).padStart(2, '0');
+        const ss = String(secs).padStart(2, '0');
+        const timerEl = document.getElementById('trailTimer');
+        const distEl = document.getElementById('trailDistance');
+        if (timerEl) {
+            timerEl.textContent = `Time on the trail: ${mm}:${ss}`;
+        }
+        if (distEl) {
+            distEl.textContent = `Miles ridden: ${milesRidden.toFixed(1)}`;
+        }
+
+        // Rare highlight window where the WANTED poster matches the rider more clearly
+        if (wantedMatchTimer > 0) {
+            wantedMatchTimer--;
+        } else if (Math.random() < 0.0002) {
+            wantedMatchTimer = 320;
+        }
+
+        if(screenShake > 0) {
+            ctx.save();
+            let shake = Math.min(screenShake, 1.6);
+        if (reducedMotion) shake *= 0.4;
+            const dx = (Math.random() - 0.5) * shake * 2;
+            const dy = (Math.random() - 0.5) * shake * 2;
+            ctx.translate(dx, dy);
+            screenShake *= 0.85;
+            if(screenShake < 0.5) screenShake = 0;
+        }
+
+        if (mesaLayer && mesaLayer.width > 0) {
+            const hz = 4;
+
+            // Heat shimmer grows slightly with distance ridden and around the brightest part of the day
+            const distFactor = Math.max(0, Math.min(1, milesRidden / 15));
+            let dayHeat = 0;
+            if (dayProgress < 0.5) {
+                dayHeat = dayProgress * 2.0;
+            } else {
+                dayHeat = (1.0 - dayProgress) * 2.0;
+            }
+            const heat = Math.max(0.2, Math.min(1.0, (distFactor + dayHeat) * 0.6));
+            const amp = 2 + 3 * heat;
+            const freq = 0.015 + 0.01 * heat;
+
+            for (let y = 0; y < height; y += hz) {
+                const shift = Math.sin(t * 0.2 + y * freq) * amp;
+                ctx.drawImage(mesaLayer, 0, y, width, hz, shift, y, width, hz);
+            }
+        }
+
+        updateAndDrawWindmill(groundY, t);
+        updateAndDrawTown(groundY, t);
+        updateAndDrawTrain(groundY, t);
+        drawVultures();
+
+        // Rare distant ghost rider silhouette in the far background
+        updateAndDrawGhostRider(groundY, t);
+
+        midScroll += 1.0 * speedFactor * parallaxFactor;
+        drawLoopingLayer(midDesertLayer, midScroll);
+
+        updateAndDrawTelegraphPoles(groundY, 2.0 * speedFactor * parallaxFactor);
+
+        frontScroll += 2.5 * speedFactor * parallaxFactor;
+        drawLoopingLayer(frontDesertLayer, frontScroll);
+
+        if (!tumbleweed.active && Math.random() < 0.005) {
+            tumbleweed.active = true;
+            tumbleweed.x = width + 50;
+            tumbleweed.y = groundY - 15;
+            tumbleweed.rot = 0;
+        }
+        if (tumbleweed.active) {
+            tumbleweed.x -= 6 * speedFactor * parallaxFactor;
+            tumbleweed.rot -= 0.15;
+            const bounce = Math.abs(Math.sin(time * 0.05)) * 15;
+            drawTumbleweed(tumbleweed.x, tumbleweed.y - bounce, 18, tumbleweed.rot);
+            if (tumbleweed.x < -50) tumbleweed.active = false;
+        }
+
+        groundScroll += 20 * speedFactor;
+        drawParticles();
+
+        ctx.fillStyle = '#6D4C41';
+        ctx.fillRect(0, groundY, width, height - groundY);
+
+        ctx.fillStyle = 'rgba(62, 39, 35, 0.3)';
+        const gLoop = groundScroll % 150;
+        for (let i = -gLoop; i < width; i += 150) {
+            ctx.beginPath();
+            ctx.ellipse(i, groundY + 20, 80, 4, 0, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        const centerX = width / 2;
+        // Horse tracks the terrain a bit so it feels like gentle rises and dips
+        const centerY = height / 2 + terrainOffset * 0.6;
+
+        // Base vertical bob & body pitch, with a subtle tiredness boost over long rides
+        const baseBobAmp = 24 * (1 + tiredSoft * 0.12);
+        const basePitchAmp = 0.14 * (1 + tiredSoft * 0.08);
+        const slowBobMul = cinematicMode ? 0.8 : 1.0;
+
+        // Jog mode: slightly stronger vertical bob, a touch less pitch
+        let jogBobMul = 1.0;
+        let jogPitchMul = 1.0;
+        if (speedFactor < 0.9) {
+            const jogT = Math.max(0, Math.min(1, (0.9 - speedFactor) / 0.3));
+            jogBobMul = 1.0 + 0.25 * jogT;      // up to +25% bob in slow jog
+            jogPitchMul = 1.0 - 0.15 * jogT;    // slightly reduce nose pitching
+        }
+
+        const bodyBobAmp = baseBobAmp * slowBobMul * jogBobMul;
+        const bodyPitchAmp = basePitchAmp * (0.9 + 0.1 * slowBobMul) * jogPitchMul;
+
+        const yOffset = -20 + Math.sin(t - 0.5) * bodyBobAmp;
+        const pitch = Math.sin(t - 1.0) * bodyPitchAmp;
+        const breath = Math.sin(t * 0.8) * 4 * SCALE;
+        const spineFlex = Math.sin(t - 2.5) * 8;
+
+        const currentBodyLen = BODY_LENGTH + spineFlex;
+        const hipBaseX = -currentBodyLen / 2;
+        const shoulderBaseX = currentBodyLen / 2;
+        const cosP = Math.cos(pitch);
+        const sinP = Math.sin(pitch);
+
+        // Very subtle shoulder/hip side-to-side sway for a less flat feel
+        const sway = Math.sin(t * 0.6) * 6 * SCALE;
+        const hipX = centerX + (hipBaseX * cosP) - sway * 0.35;
+        const hipY = centerY + yOffset + (hipBaseX * sinP) - 5;
+        const shoulderX = centerX + (shoulderBaseX * cosP) + sway * 0.35;
+        const shoulderY = centerY + yOffset + (shoulderBaseX * sinP) + 15;
+
+        const neckBaseAngle = -Math.PI / 4.2;
+
+        // Neck compression on foreleg impact: react to front leg contact
+        const foreOnGround = (legOnGround[1] || legOnGround[3]) ? 1 : 0;
+        const targetNeckImpact = foreOnGround;
+        neckImpact += (targetNeckImpact - neckImpact) * 0.18; // smooth towards target
+        // Extra micro-dip as the ride goes on
+        const neckExtraDip = tiredSoft * 0.04;
+        const neckBob = pitch * 0.8 + (yOffset * 0.005) - neckImpact * 0.12 - neckExtraDip;
+
+        // Slight stretch when airborne (inverse of impact)
+        const neckStretch = 1 + (1 - neckImpact) * 0.08;
+
+        const neckAngle = neckBaseAngle + neckBob;
+        const neckX = shoulderX + Math.cos(neckAngle) * (NECK_LENGTH * neckStretch);
+        const neckY = shoulderY + Math.sin(neckAngle) * (NECK_LENGTH * neckStretch);
+        const headAngle = neckAngle + Math.PI / 2.3;
+        const headX = neckX + Math.cos(headAngle) * HEAD_LENGTH;
+        const headY = neckY + Math.sin(headAngle) * HEAD_LENGTH;
+
+        const timeShadowStretch = 1 + (dayProgress * 0.8);
+        const shadowScale = (1 + ((yOffset + 20) / 40)) * timeShadowStretch;
+        const shadowAlpha = (0.5 - ((yOffset + 20) / 100)) * (1 - dayProgress * 0.3);
+
+        ctx.fillStyle = `rgba(30, 20, 10, ${Math.max(0.1, shadowAlpha)})`;
+        ctx.beginPath();
+        const shadowX = centerX + (dayProgress * 40);
+        ctx.ellipse(shadowX, groundY + 5, 120 * SCALE * shadowScale, 15 * shadowScale, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        const colorHighlight = '#8D6E63';
+        const colorMid      = '#5D4037';
+        const colorShadow   = '#3E2723';
+
+        function drawLeg(attachX, attachY, phaseOffset, isBackLeg, isForeground, legIndex) {
+            const baseColor = isForeground ? '#3E2723' : '#5D4037';
+
+            // Smooth cyclical motion using sin/cos, with per-leg phase offsets
+            let extraPhase = 0;
+            if (typeof legIndex === 'number') {
+                if (isBackLeg) {
+                    // Hind legs slightly offset from each other
+                    extraPhase = (legIndex === 2) ? 0.0 : Math.PI * 0.6;
+                } else {
+                    // Forelegs offset later in the cycle
+                    extraPhase = (legIndex === 3) ? Math.PI * 1.2 : Math.PI * 1.7;
+                }
+            }
+
+            // Base leg cycle speed
+            let speedMul = 0.75;
+
+            // In Jog mode, legs cycle a bit slower so the gait feels heavier
+            if (speedFactor < 0.9) {
+                speedMul *= 0.8; // 20% slower leg cycle on top of global speedFactor
+            }
+
+            const cycle = (t * speedMul + phaseOffset + extraPhase) % (Math.PI * 2);
+
+            const strideW = (isBackLeg ? 110 : 130) * SCALE;
+            const strideH = (isBackLeg ? 55 : 90) * SCALE;
+            const neutralShift = isBackLeg ? -10 * SCALE : 25 * SCALE;
+
+            const rawX = Math.cos(cycle);
+            const rawY = Math.sin(cycle);
+
+            let footLocalX = rawX * strideW * 0.6 + neutralShift;
+            const liftCenter = (isBackLeg ? 115 : 100) * SCALE;
+            // Slightly exaggerated lift for forelegs for a more dramatic, anime-style gallop
+            const liftAmp    = strideH * (isBackLeg ? 0.5 : 0.7);
+
+            let targetX = attachX + footLocalX;
+            const footYRaw = attachY + liftCenter + rawY * liftAmp;
+            let targetY;
+            let onGround = false;
+
+            // Very soft ground band to avoid popping exactly at contact
+            const groundBandTop = groundY - 6 * SCALE;
+            if (footYRaw >= groundBandTop) {
+                targetY = groundBandTop;
+                onGround = true;
+            } else {
+                targetY = footYRaw;
+            }
+
+            // A synthetic "rawX" just for hoof styling & contraction timing
+            // (now directly from the cycle)
+
+            if (typeof legIndex === 'number') {
+                if (onGround && !legOnGround[legIndex]) {
+                    legOnGround[legIndex] = true;
+                    createDust(targetX, targetY);
+                    playHoof(isForeground ? 0.16 : 0.1);
+
+                    // Hoof impact → subtle screen nudge
+                    hoofImpactCounter++;
+                    if (isForeground && !isBackLeg && (hoofImpactCounter % 2 === 0)) {
+                        if (screenShake < 1.0) screenShake = 2.0;
+                    }
+                } else if (!onGround && legOnGround[legIndex]) {
+                    legOnGround[legIndex] = false;
+                }
+            }
+
+            const bendDir = -1;
+            const len1 = isBackLeg ? BACK_UPPER_LEN : FRONT_UPPER_LEN;
+            const len2 = isBackLeg ? BACK_LOWER_LEN : FRONT_LOWER_LEN;
+            const ik = solveIK(attachX, attachY, targetX, targetY, len1, len2, bendDir);
+            let contraction = onGround ? 6 : 0;
+            if (!onGround && rawX > 0.5) contraction = -4;
+
+            if (isBackLeg) {
+                drawMuscleSegment(attachX, attachY, ik.x, ik.y, 60*SCALE, 35*SCALE, 20 + contraction, 0.4, baseColor, 25);
+                ctx.save();
+                const dx = targetX - ik.x;
+                const dy = targetY - ik.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const angle = Math.atan2(dy, dx);
+                ctx.translate(ik.x, ik.y);
+                ctx.rotate(angle);
+                ctx.fillStyle = baseColor;
+                ctx.beginPath();
+                ctx.moveTo(0, -12);
+                ctx.lineTo(dist, -6);
+                ctx.lineTo(dist, 6);
+                ctx.bezierCurveTo(dist*0.4, 25*SCALE + (contraction*0.5), dist*0.1, 28*SCALE, 0, 15*SCALE);
+                ctx.fill();
+                ctx.restore();
+            } else {
+                drawMuscleSegment(attachX, attachY, ik.x, ik.y, 40*SCALE, 20*SCALE, 15 + contraction, 0.3, baseColor, 15);
+                drawMuscleSegment(ik.x, ik.y, targetX, targetY, 15*SCALE, 10*SCALE, 1, 0.5, baseColor);
+            }
+
+            let hoofAngle = 0;
+            const legAngle = Math.atan2(targetY - ik.y, targetX - ik.x);
+            if (onGround) { hoofAngle = 0; }
+            else {
+                if (rawX < -0.5) hoofAngle = legAngle + 1.2;
+                else if (rawX > 0.5) hoofAngle = legAngle - 0.2;
+                else hoofAngle = legAngle + 0.5;
+            }
+
+            ctx.save();
+            ctx.translate(targetX, targetY);
+            if (!onGround) ctx.rotate(hoofAngle - Math.PI/2);
+            ctx.fillStyle = '#212121';
+            if(onGround) {
+                ctx.beginPath();
+                ctx.moveTo(8, -2); ctx.lineTo(8, 0); ctx.lineTo(12, 0);
+                ctx.lineTo(-10, 0); ctx.lineTo(-8, -5); ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(-5, 0); ctx.lineTo(5, 0); ctx.lineTo(8, 15); ctx.lineTo(-10, 15); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // background legs
+        drawLeg(hipX, hipY, 0.0, true,  false, 0);
+        drawLeg(shoulderX, shoulderY, 3.8, false, false, 1);
+
+        // Tail (slight lag behind body bob for more natural motion)
+        ctx.fillStyle = '#1a0500';
+        ctx.beginPath();
+        const tailRootX = hipX - 15;
+        const tailRootY = hipY - 5;
+        const flowX = -50 * SCALE;
+        const flowY = 30 * SCALE;
+        const tailPhase = t - 0.4; // small delay relative to main body motion
+        const wave1 = Math.sin(tailPhase * 1.5 - 1.5) * 20;
+        const wave2 = Math.cos(tailPhase * 1.5 - 0.5) * 10;
+        ctx.moveTo(tailRootX, tailRootY);
+        ctx.bezierCurveTo(tailRootX - 35, tailRootY - 15 + wave2, tailRootX + flowX + 30, tailRootY + flowY + wave1, tailRootX + flowX, tailRootY + flowY + TAIL_LENGTH);
+        ctx.bezierCurveTo(tailRootX + flowX + 20, tailRootY + flowY + TAIL_LENGTH/2, tailRootX - 5, tailRootY + 30, tailRootX + 15, tailRootY + 15);
+        ctx.fill();
+
+        const bodyGrad = ctx.createLinearGradient(shoulderX, shoulderY - 60, shoulderX, shoulderY + 60);
+        bodyGrad.addColorStop(0, colorHighlight);
+        bodyGrad.addColorStop(0.4, colorMid);
+        bodyGrad.addColorStop(1, colorShadow);
+        ctx.fillStyle = bodyGrad;
+
+        ctx.beginPath();
+        const midBodyX = (hipX + shoulderX) / 2;
+        const midBodyY = (hipY + shoulderY) / 2;
+        const withersX = shoulderX - 15 * SCALE;
+        const withersY = shoulderY - 35 * SCALE;
+        const croupX = hipX - 10 * SCALE;
+        const croupY = hipY - 28 * SCALE;
+        const chestX = shoulderX + 40 * SCALE;
+        const chestY = shoulderY + 10 * SCALE;
+        const snoutX = headX + 22 * SCALE;
+        const snoutY = headY + 10 * SCALE;
+        const jawX = headX - 15 * SCALE;
+        const jawY = headY + 25 * SCALE;
+        const throatX = neckX - 5;
+        const throatY = neckY + 20 * SCALE;
+
+        ctx.moveTo(withersX, withersY);
+        const pollX = headX - 8;
+        const pollY = headY - 25 * SCALE;
+        const earTipX = pollX - 2 * SCALE;
+        const earTipY = pollY - 14 * SCALE;
+
+        ctx.quadraticCurveTo(withersX + 20, withersY - 50, pollX, pollY);
+        ctx.lineTo(earTipX, earTipY);
+        ctx.lineTo(headX + 5, headY - 18 * SCALE);
+        ctx.quadraticCurveTo(headX + 15, headY + 5, snoutX, snoutY);
+        ctx.lineTo(snoutX - 5, snoutY + 10);
+        ctx.quadraticCurveTo(headX, jawY + 5, jawX, jawY);
+        ctx.quadraticCurveTo(throatX, throatY + 5, chestX, chestY);
+
+        const bellyLowX = midBodyX - 10 * SCALE;
+        const bellyLowY = midBodyY + 75 * SCALE + (breath*0.5);
+        const flankX = hipX + 15;
+        const flankY = hipY + 40 * SCALE;
+
+        ctx.quadraticCurveTo(shoulderX, shoulderY + 50 * SCALE, bellyLowX, bellyLowY);
+        ctx.quadraticCurveTo(midBodyX + 20, bellyLowY, flankX, flankY);
+        ctx.quadraticCurveTo(hipX - 70 * SCALE, hipY + 20 * SCALE, croupX, croupY);
+        ctx.quadraticCurveTo(midBodyX, midBodyY - 15 * SCALE, withersX, withersY);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(pollX + 2, pollY - 8);
+        ctx.lineTo(earTipX + 2, earTipY + 4);
+        ctx.strokeStyle = '#2a0e04';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (blinkTimer > 0) {
+            blinkTimer--;
+            ctx.beginPath();
+            ctx.strokeStyle = '#3e1405'; ctx.lineWidth = 2;
+            ctx.moveTo(neckX + (headX - neckX) * 0.7 - 8, neckY + (headY - neckY) * 0.7 - 5);
+            ctx.lineTo(neckX + (headX - neckX) * 0.7 - 2, neckY + (headY - neckY) * 0.7 - 5);
+            ctx.stroke();
+        } else {
+            if (Math.random() < 0.005) blinkTimer = 10;
+            ctx.beginPath();
+            ctx.fillStyle = '#3e1405';
+            ctx.arc(neckX + (headX - neckX) * 0.7 - 5, neckY + (headY - neckY) * 0.7 - 5, 3, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // foreground legs
+        drawLeg(hipX, hipY, 0.0, true,  true,  2);
+        drawLeg(shoulderX, shoulderY, 3.6, false, true, 3);
+
+        if (dayProgress > 0.5) {
+             ctx.save();
+             ctx.globalCompositeOperation = 'overlay';
+             ctx.globalAlpha = (dayProgress - 0.5) * 2 * 0.3;
+             ctx.translate(-2, -2);
+             const rimGrad = ctx.createRadialGradient(shoulderX, shoulderY - 50, 10, shoulderX, shoulderY, 150);
+             rimGrad.addColorStop(0, 'rgba(255, 200, 150, 0.5)');
+             rimGrad.addColorStop(1, 'rgba(0,0,0,0)');
+             ctx.fillStyle = rimGrad;
+             ctx.fillRect(centerX - 150, centerY - 150, 300, 300);
+             ctx.restore();
+        }
+
+        foreScroll += 5.0;
+        drawLoopingLayer(foregroundLayer, foreScroll);
+
+        updateAndDrawProps(5.0);
+
+        ctx.restore();
+
+        // Color tint overlay based on preset
+        if (colorGrade !== 'neutral') {
+            ctx.save();
+            let tintStyle = 'rgba(255, 180, 120, 0.18)';
+            if (colorGrade === 'cool') {
+                tintStyle = 'rgba(120, 170, 255, 0.18)';
+            }
+            ctx.fillStyle = tintStyle;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+        }
+
+
+        // --- Chapter card text (top-left, subtle fade) ---
+        if (chapterActiveIndex >= 0 && chapterAlpha > 0) {
+            ctx.save();
+            ctx.globalAlpha = chapterAlpha;
+            ctx.fillStyle = '#f5e9d6';
+            ctx.font = '14px "Courier New", monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+
+            const barHeight = height * 0.1;
+            const marginX = 22;
+            const marginY = barHeight + 10; // just below top letterbox
+
+            const line = chapterLines[chapterActiveIndex];
+            ctx.fillText(line, marginX, marginY);
+            ctx.restore();
+        }
+
+        drawFilmGrain();
+
+        if (titleOpacity > 0) {
+            titleTimer += 16;
+            if (titleTimer > 4000) {
+                titleOpacity -= 0.01;
+            }
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, titleOpacity);
+            ctx.fillStyle = '#E8E0D5';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 10;
+
+            ctx.translate(0, filmJitterY * 0.5);
+
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 52px "Courier New", serif';
+            ctx.fillText("THE WILD RIDER", width/2, height/2 - 20);
+
+            ctx.font = '24px "Courier New", serif';
+            ctx.fillText("LAST RIDE HOME", width/2, height/2 + 30);
+
+            ctx.strokeStyle = '#E8E0D5';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width/2 - 150, height/2 - 40);
+            ctx.lineTo(width/2 + 150, height/2 - 40);
+            ctx.moveTo(width/2 - 100, height/2 + 50);
+            ctx.lineTo(width/2 + 100, height/2 + 50);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        ctx.fillStyle = '#000';
+        const barHeight = height * 0.1;
+        ctx.fillRect(0, 0, width, barHeight);
+        ctx.fillRect(0, height - barHeight, width, barHeight);
+
+        if(screenShake > 0) ctx.restore();
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+</script>
+</body>
+</html>
