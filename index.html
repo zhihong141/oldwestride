@@ -31,7 +31,7 @@
         h1 { margin: 0 0 5px 0; font-size: 18px; color: #ffab91; text-transform: uppercase; letter-spacing: 2px; }
         p { margin: 0 0 5px 0; font-size: 12px; color: #bcaaa4; line-height: 1.4; }
         .highlight { color: #ffcc80; font-weight: bold; }
-    
+
         /* --- Responsive layout tweaks --- */
         @media (max-width: 768px) {
             #controls {
@@ -63,88 +63,80 @@
             }
         }
 
-        /* --- Mobile landscape & responsiveness --- */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        #orientationOverlay {
+/* Tiny creator / credits corner */
+        #creditsCorner {
             position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 50% 30%, rgba(33,24,18,0.96), rgba(9,4,2,0.98));
+            right: 12px;
+            bottom: 10px;
+            z-index: 20;
+            font-size: 11px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'DM Sans', sans-serif;
             color: #ffe0b2;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-            z-index: 9999;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 204, 128, 0.6);
+            border-radius: 999px;
+            padding: 4px 10px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s ease, background 0.2s ease, transform 0.1s ease;
         }
-        #orientationOverlay h2 {
-            font-size: 18px;
-            margin-bottom: 8px;
+        #creditsCorner:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.75);
+            transform: translateY(-1px);
         }
-        #orientationOverlay p {
-            font-size: 13px;
-            color: #d7ccc8;
-            max-width: 320px;
-            margin: 0 auto;
+        #creditsPanel {
+            position: fixed;
+            right: 12px;
+            bottom: 32px;
+            max-width: 260px;
+            z-index: 21;
+            background: rgba(12, 8, 6, 0.96);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 204, 128, 0.7);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.8);
+            padding: 10px 12px 10px 12px;
+            color: #ffe0b2;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'DM Sans', sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
         }
-        @media (max-width: 768px) {
-            #controls {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                max-width: none;
-                width: auto;
-                font-size: 11px;
-                padding: 10px;
-            }
-            #controls p,
-            #controls label,
-            #controls button {
-                font-size: 11px;
-            }
+        #creditsPanel.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
         }
-        @media (max-width: 480px) {
-            #controls {
-                top: 8px;
-                left: 8px;
-                right: 8px;
-                padding: 8px;
-                max-height: 80vh;
-                overflow-y: auto;
-            }
-            #controls h1 {
-                font-size: 16px;
-            }
+        #creditsPanel h2 {
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #ffcc80;
+        }
+        #creditsPanel p {
+            margin: 2px 0;
+        }
+        #creditsPanel .credits-meta {
+            font-size: 10px;
+            color: #b0a49a;
+        }
+        #creditsClose {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #ffcc80;
+            opacity: 0.8;
+        }
+        #creditsClose:hover {
+            opacity: 1;
         }
 
-        /* Extra compact layout for small landscape phones */
-        @media (max-height: 480px) and (orientation: landscape) {
-            #controls {
-                top: 6px;
-                right: 6px;
-                left: auto;
-                max-width: 260px;
-                padding: 6px 8px;
-                font-size: 10px;
-            }
-            #controls h1 {
-                font-size: 14px;
-            }
-            #controls p,
-            #controls label,
-            #controls button,
-            #controls input,
-            #controls select {
-                font-size: 10px;
-            }
-        }
 </style>
 </head>
 <body>
@@ -232,17 +224,17 @@
         </label>
         <p style="margin:3px 0 0 0;font-size:10px;color:#8d6e63;">For comfort or sensitive viewers.</p>
     </div>
+<div style="margin-top:6px;">
+    <label style="font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="letterboxToggle" style="transform:scale(0.9);" checked />
+        <span><span class="highlight">Cinematic bars:</span> show top & bottom letterbox</span>
+    </label>
+    <p style="margin:3px 0 0 0;font-size:10px;color:#8d6e63;">Uncheck for a full-frame ride.</p>
+</div>
 </div>
 <div id="uiHint" style="position:fixed;top:12px;right:12px;padding:6px 10px;background:rgba(20,15,10,0.85);border-radius:3px;border:1px solid #8d6e63;font-size:10px;color:#ffe0b2;z-index:9;display:none;pointer-events:none;">
     Controls hidden – press H to show.
 </div>
-<div id="orientationOverlay">
-    <div>
-        <h2>Rotate your phone</h2>
-        <p>For the best view of this ride, please turn your device to landscape.</p>
-    </div>
-</div>
-
 <canvas id="canvas"></canvas>
 
 <script>
@@ -258,18 +250,9 @@
     function resize() {
         width = Math.max(1, window.innerWidth);
         height = Math.max(1, window.innerHeight);
-
-        // Match canvas CSS size to viewport so it fills the screen on phones
-        if (canvas) {
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-        }
-
         const dpr = window.devicePixelRatio || 1;
-        if (canvas) {
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-        }
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
         if (ctx && typeof ctx.setTransform === 'function') {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
@@ -280,9 +263,9 @@
     window.addEventListener('resize', resize);
 
     // --- Configuration ---
-    const SCALE = 1.1; // slightly smaller horse & body scale for better fit on phones
+    const SCALE = 1.35;
     const SPEED_MULTIPLIER = 0.016;
-    const GROUND_Y_OFFSET = 160; // raise ground a bit to reveal more sky on short screens
+    const GROUND_Y_OFFSET = 180;
 
     // Anatomy
     const BODY_LENGTH = 125 * SCALE;
@@ -316,6 +299,7 @@
     let cueDotActive = 0;
     let filmJitterY = 0;
     let reducedMotion = false;
+    let showLetterbox = true;
 
     // Scroll offsets
     let mountScroll = 0;
@@ -537,30 +521,8 @@
     }
 
     // Wire up the file input, speed slider & tint presets once DOM is ready
-    
-    function handleOrientationChange() {
-        const overlay = document.getElementById('orientationOverlay');
-        if (!overlay) return;
-        const isPortrait = window.innerHeight > window.innerWidth;
-        if (isPortrait) {
-            overlay.style.display = 'flex';
-        } else {
-            overlay.style.display = 'none';
-        }
-    }
-
-window.addEventListener('resize', handleOrientationChange);
-window.addEventListener('load', handleOrientationChange);
-
-window.addEventListener('load', () => {
+    window.addEventListener('load', () => {
         const controlsDiv = document.getElementById('controls');
-        // On small landscape screens, start with UI hidden to maximize view
-        if (window.innerWidth > window.innerHeight && window.innerHeight < 460) {
-            if (typeof setUiHidden === 'function') {
-                setTimeout(() => setUiHidden(true), 150);
-            }
-        }
-
         const uiHint = document.getElementById('uiHint');
         const canvasEl = document.getElementById('canvas');
 
@@ -611,6 +573,26 @@ window.addEventListener('load', () => {
                 }
                 setupCustomMusic(file);
             });
+
+        const creditsCorner = document.getElementById('creditsCorner');
+                const creditsPanel = document.getElementById('creditsPanel');
+                const creditsClose = document.getElementById('creditsClose');
+                if (creditsCorner && creditsPanel) {
+                    const setCreditsVisible = (visible) => {
+                        if (!creditsPanel) return;
+                        creditsPanel.classList.toggle('visible', visible);
+                    };
+                    creditsCorner.addEventListener('click', () => {
+                        const isVisible = creditsPanel.classList.contains('visible');
+                        setCreditsVisible(!isVisible);
+                    });
+                    if (creditsClose) {
+                        creditsClose.addEventListener('click', () => setCreditsVisible(false));
+                    }
+                }
+
+
+
         }
 
         const speedSlider = document.getElementById('speedSlider');
@@ -723,6 +705,14 @@ window.addEventListener('load', () => {
         if (reducedMotionToggle) {
             reducedMotionToggle.addEventListener('change', () => {
                 reducedMotion = !!reducedMotionToggle.checked;
+            });
+        }
+
+        const letterboxToggle = document.getElementById('letterboxToggle');
+        if (letterboxToggle) {
+            showLetterbox = !!letterboxToggle.checked;
+            letterboxToggle.addEventListener('change', () => {
+                showLetterbox = !!letterboxToggle.checked;
             });
         }
 
@@ -1002,7 +992,7 @@ window.addEventListener('load', () => {
         return `rgb(${r}, ${g}, ${b})`;
     }
 
-    
+
     function capturePostcard() {
         if (!canvas) return;
         try {
@@ -1366,10 +1356,14 @@ window.addEventListener('load', () => {
         ctx.rotate(angle);
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo(0, -wStart/2);
-        ctx.quadraticCurveTo(dist/2, -wEnd/2 - topBulge, dist, -wEnd/2);
-        ctx.lineTo(dist, wEnd/2);
-        ctx.quadraticCurveTo(dist * bulgePos, wEnd/2 + bulge, 0, wStart/2);
+        // Rounded inner side where the leg meets the body
+        ctx.moveTo(0, -wStart / 2);
+        ctx.quadraticCurveTo(-wStart * 0.6, 0, 0, wStart / 2);
+        // Lower outer curve towards the distal end
+        ctx.quadraticCurveTo(dist * bulgePos, wEnd / 2 + bulge, dist, wEnd / 2);
+        // Upper outer curve back toward the body
+        ctx.quadraticCurveTo(dist / 2, -wEnd / 2 - topBulge, 0, -wStart / 2);
+        ctx.closePath();
         ctx.fill();
         ctx.restore();
     }
@@ -1796,7 +1790,7 @@ window.addEventListener('load', () => {
         });
     }
 
-    
+
     function spawnMileMarker(mileNumber, groundY) {
         // Mile markers spawn as simple signposts nearer to the camera,
         // with a tiny engraved-like number, so distance feels in-world.
@@ -2329,6 +2323,7 @@ if (Math.random() < 0.02) {
 
         function drawLeg(attachX, attachY, phaseOffset, isBackLeg, isForeground, legIndex) {
             const baseColor = isForeground ? '#3E2723' : '#5D4037';
+            const thicknessMul = isForeground ? 1.0 : 0.85;
 
             // Smooth cyclical motion using sin/cos, with per-leg phase offsets
             let extraPhase = 0;
@@ -2398,32 +2393,78 @@ if (Math.random() < 0.02) {
             }
 
             const bendDir = -1;
-            const len1 = isBackLeg ? BACK_UPPER_LEN : FRONT_UPPER_LEN;
-            const len2 = isBackLeg ? BACK_LOWER_LEN : FRONT_LOWER_LEN;
+            // Small perspective cheat: foreground legs slightly longer / larger,
+            // background legs slightly shorter, to fake depth toward the camera.
+            const depthMul = isForeground ? 1.03 : 0.97;
+            const len1 = (isBackLeg ? BACK_UPPER_LEN : FRONT_UPPER_LEN) * depthMul;
+            const len2 = (isBackLeg ? BACK_LOWER_LEN : FRONT_LOWER_LEN) * depthMul;
             const ik = solveIK(attachX, attachY, targetX, targetY, len1, len2, bendDir);
             let contraction = onGround ? 6 : 0;
             if (!onGround && rawX > 0.5) contraction = -4;
 
             if (isBackLeg) {
-                drawMuscleSegment(attachX, attachY, ik.x, ik.y, 60*SCALE, 35*SCALE, 20 + contraction, 0.4, baseColor, 25);
-                ctx.save();
-                const dx = targetX - ik.x;
-                const dy = targetY - ik.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const angle = Math.atan2(dy, dx);
-                ctx.translate(ik.x, ik.y);
-                ctx.rotate(angle);
-                ctx.fillStyle = baseColor;
-                ctx.beginPath();
-                ctx.moveTo(0, -12);
-                ctx.lineTo(dist, -6);
-                ctx.lineTo(dist, 6);
-                ctx.bezierCurveTo(dist*0.4, 25*SCALE + (contraction*0.5), dist*0.1, 28*SCALE, 0, 15*SCALE);
-                ctx.fill();
-                ctx.restore();
+                // Hind leg: rounded, weighty upper + lower capsules
+                const upperStart = 56 * SCALE * thicknessMul;
+                const upperEnd   = 32 * SCALE * thicknessMul;
+                const upperBulge = (18 + contraction) * thicknessMul;
+                drawMuscleSegment(
+                    attachX, attachY,
+                    ik.x, ik.y,
+                    upperStart, upperEnd,
+                    upperBulge,
+                    0.5,
+                    baseColor,
+                    22 * thicknessMul
+                );
+
+                const lowerStart = 28 * SCALE * thicknessMul;
+                const lowerEnd   = 18 * SCALE * thicknessMul;
+                const lowerBulge = (10 + contraction * 0.6) * thicknessMul;
+                drawMuscleSegment(
+                    ik.x, ik.y,
+                    targetX, targetY,
+                    lowerStart, lowerEnd,
+                    lowerBulge,
+                    0.6,
+                    baseColor
+                );
             } else {
-                drawMuscleSegment(attachX, attachY, ik.x, ik.y, 40*SCALE, 20*SCALE, 15 + contraction, 0.3, baseColor, 15);
-                drawMuscleSegment(ik.x, ik.y, targetX, targetY, 15*SCALE, 10*SCALE, 1, 0.5, baseColor);
+                // Foreleg: slimmer, elegant taper, with a clear knee and cannon bone
+                const upperStart = 42 * SCALE * thicknessMul;
+                const upperEnd   = 24 * SCALE * thicknessMul;
+                const upperBulge = (14 + contraction) * thicknessMul;
+                drawMuscleSegment(
+                    attachX, attachY,
+                    ik.x, ik.y,
+                    upperStart, upperEnd,
+                    upperBulge,
+                    0.35,
+                    baseColor,
+                    16 * thicknessMul
+                );
+
+                const lowerStart = 20 * SCALE * thicknessMul;
+                const lowerEnd   = 12 * SCALE * thicknessMul;
+                drawMuscleSegment(
+                    ik.x, ik.y,
+                    targetX, targetY,
+                    lowerStart, lowerEnd,
+                    5 * thicknessMul,
+                    0.55,
+                    baseColor
+                );
+            // Soften the knee / hock joint with a subtle blended cap
+            const jointRadius = (isBackLeg ? 11 : 9) * SCALE * thicknessMul;
+            ctx.save();
+            ctx.fillStyle = baseColor;
+            ctx.globalAlpha *= 0.6;
+            ctx.beginPath();
+            const jointOffsetX = (attachX - targetX) * 0.06;
+            const jointOffsetY = (attachY - targetY) * 0.06;
+            ctx.arc(ik.x + jointOffsetX, ik.y + jointOffsetY, jointRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
             }
 
             let hoofAngle = 0;
@@ -2439,13 +2480,31 @@ if (Math.random() < 0.02) {
             ctx.translate(targetX, targetY);
             if (!onGround) ctx.rotate(hoofAngle - Math.PI/2);
             ctx.fillStyle = '#212121';
-            if(onGround) {
+            if (onGround) {
+                // Grounded hoof: low, trapezoid with a slight toe angle.
+                // Foreground hooves drawn a touch larger to feel closer to camera.
+                const hoofDepth = isForeground ? 1.06 : 0.94;
+                const hoofWFront = 14 * SCALE * hoofDepth;
+                const hoofWBack  = 10 * SCALE * hoofDepth;
+                const hoofH      = 8 * SCALE * hoofDepth;
                 ctx.beginPath();
-                ctx.moveTo(8, -2); ctx.lineTo(8, 0); ctx.lineTo(12, 0);
-                ctx.lineTo(-10, 0); ctx.lineTo(-8, -5); ctx.fill();
+                ctx.moveTo( hoofWFront * 0.5, -hoofH * 0.2);
+                ctx.lineTo( hoofWFront * 0.5, 0);
+                ctx.lineTo(-hoofWBack  * 0.5, 0);
+                ctx.lineTo(-hoofWBack  * 0.5 + 2 * SCALE, -hoofH * 0.6);
+                ctx.closePath();
+                ctx.fill();
             } else {
+                // Swinging hoof: slightly extended, more vertical profile
+                const hoofW  = 10 * SCALE;
+                const hoofH2 = 14 * SCALE;
                 ctx.beginPath();
-                ctx.moveTo(-5, 0); ctx.lineTo(5, 0); ctx.lineTo(8, 15); ctx.lineTo(-10, 15); ctx.fill();
+                ctx.moveTo(-hoofW * 0.4, 0);
+                ctx.lineTo( hoofW * 0.4, 0);
+                ctx.lineTo( hoofW * 0.55, hoofH2);
+                ctx.lineTo(-hoofW * 0.65, hoofH2);
+                ctx.closePath();
+                ctx.fill();
             }
             ctx.restore();
         }
@@ -2630,8 +2689,10 @@ if (Math.random() < 0.02) {
 
         ctx.fillStyle = '#000';
         const barHeight = height * 0.1;
-        ctx.fillRect(0, 0, width, barHeight);
-        ctx.fillRect(0, height - barHeight, width, barHeight);
+        if (showLetterbox) {
+            ctx.fillRect(0, 0, width, barHeight);
+            ctx.fillRect(0, height - barHeight, width, barHeight);
+        }
 
         if(screenShake > 0) ctx.restore();
 
@@ -2640,5 +2701,19 @@ if (Math.random() < 0.02) {
 
     draw();
 </script>
+
+<div id="creditsCorner" title="About this ride">
+    i • info
+</div>
+<div id="creditsPanel">
+    <div id="creditsClose" aria-label="Close credits">×</div>
+    <h2>Ride 'til I can't no more</h2>
+    <p>An interactive westward horse ride &amp; ambient short film.</p>
+    <p class="credits-meta">Created by <span class="highlight">SEVEN.FOUR</span></p>
+    <p class="credits-meta">Build: <span class="highlight">Ver 1.5</span></p>
+    <p class="credits-meta">Tip: Use Camera mode &amp; Capture postcard for clean stills.</p>
+</div>
+
+
 </body>
 </html>
